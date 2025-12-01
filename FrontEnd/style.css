@@ -183,6 +183,88 @@ body {
   justify-content: space-between;
   transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
+/* ============================================
+   GAMING HOVER EFFECT – neon, blur, glow, shake
+   ============================================ */
+.side-link,
+.top-link,
+.top-btn {
+  position: relative;
+  overflow: hidden;
+  transition: 0.2s ease;
+}
+
+.side-link:hover,
+.top-link:hover,
+.top-btn:hover {
+  transform: translateX(6px) scale(1.05);
+  color: #fff !important;
+  text-shadow: 0 0 10px #a5b4fc, 0 0 20px #818cf8;
+}
+
+/* neon border pulse */
+.side-link:hover::before,
+.top-link:hover::before,
+.top-btn:hover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(129, 140, 248, 0.9);
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.8),
+              0 0 22px rgba(99, 102, 241, 0.8);
+  animation: borderPulse 0.8s ease-out infinite alternate;
+}
+
+@keyframes borderPulse {
+  0% { opacity: 0.4; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
+/* laser sweep line */
+.side-link:hover::after,
+.top-link:hover::after,
+.top-btn:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  left: -60%;
+  background: linear-gradient(90deg,
+    rgba(99,102,241,0) 0%,
+    rgba(99,102,241,0.7) 50%,
+    rgba(99,102,241,0) 100%);
+  animation: laserSweep 0.7s ease-out forwards;
+}
+
+@keyframes laserSweep {
+  0% { left: -60%; }
+  100% { left: 120%; }
+}
+
+/* shockwave circular pulse */
+.side-link:hover .shockwave,
+.top-link:hover .shockwave,
+.top-btn:hover .shockwave {
+  opacity: 1;
+  transform: scale(2.5);
+}
+
+.shockwave {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(99,102,241,0.5), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.45s cubic-bezier(0.19,1,0.22,1);
+}
+
 
 .side-link:hover {
   background: rgba(15, 23, 42, 0.9);
