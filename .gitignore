@@ -1,0 +1,10 @@
+# DO NOT TRACK ENV FILE
+Backend/.env
+
+# Node Modules ignore
+Backend/node_modules/
+Frontend/node_modules/
+
+# Other ignores
+.DS_Store
+.vscode/
