@@ -1,0 +1,334 @@
+// ================= TAB SWITCH + ANIMATION =================
+const views = document.querySelectorAll(".view");
+const viewTriggers = document.querySelectorAll("[data-view]");
+const sideLinks = document.querySelectorAll(".side-link");
+const flashBar = document.getElementById("switchFlash");
+
+viewTriggers.forEach((trigger) => {
+  trigger.addEventListener("click", (event) => {
+    // kuch buttons (login etc.) sirf modal kholte hain,
+    // agar unka data-view exist nahi karta to simply ignore.
+    event.preventDefault();
+
+    const target = trigger.getAttribute("data-view");
+    if (!target) return;
+
+    const targetId = `view-${target}`;
+    const nextView = document.getElementById(targetId);
+    if (!nextView) return;
+
+    // sab views se active + animation class hatao
+    views.forEach((v) => v.classList.remove("view-active", "view-anim-in"));
+
+    // naya view dikhao
+    nextView.classList.add("view-active");
+    // reflow for restart animation
+    void nextView.offsetWidth;
+    nextView.classList.add("view-anim-in");
+
+    // sidebar active state
+    if (trigger.classList.contains("side-link")) {
+      sideLinks.forEach((b) => b.classList.remove("active"));
+      trigger.classList.add("active");
+    }
+
+    // neon flash bar
+    if (flashBar) {
+      flashBar.classList.remove("flash-go");
+      void flashBar.offsetWidth;
+      flashBar.classList.add("flash-go");
+    }
+  });
+});
+
+// ================= SIDEBAR TOGGLE (mobile) =================
+const sidebar = document.querySelector(".sidebar");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const main = document.querySelector(".main");
+
+if (sidebar && sidebarToggle) {
+  sidebarToggle.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+  });
+}
+
+if (main && sidebar) {
+  main.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+  });
+}
+
+// ================= YEAR IN FOOTER =================
+const yearSpan = document.getElementById("year");
+if (yearSpan) {
+  yearSpan.textContent = new Date().getFullYear();
+}
+
+// ================= AUTH + MODAL LOGIC =================
+const API_BASE = "http://localhost:5000";
+
+// --- modal elements (Kahoot style card) ---
+const authOverlay  = document.getElementById("authOverlay");
+const authCloseBtn = document.getElementById("authCloseBtn");
+const tabLogin     = document.getElementById("tabLogin");
+const tabSignup    = document.getElementById("tabSignup");
+const loginPanel   = document.getElementById("loginPanel");
+const signupPanel  = document.getElementById("signupPanel");
+const authTitle    = document.getElementById("authTitle");
+const authSubtitle = document.getElementById("authSubtitle");
+const authStatus   = document.getElementById("authStatus");
+
+// neeche text-wala Sign up button
+const authGoSignup = document.getElementById("authGoSignup");
+
+// teen triggers: Host button / Login button / Avatar
+const authTriggers = [
+  document.getElementById("btnHostTop"),
+  document.getElementById("btnAuthTop"),
+  document.getElementById("btnAvatarTop"),
+];
+
+// -------- open / close helpers --------
+function openAuthModal() {
+  if (!authOverlay) return;
+  authOverlay.classList.remove("hidden");
+  if (authStatus) {
+    authStatus.style.color = "#b91c1c"; // default red-ish for errors later
+    authStatus.textContent = "";
+  }
+}
+
+function closeAuthModal() {
+  if (!authOverlay) return;
+  authOverlay.classList.add("hidden");
+}
+
+// current user helper
+function getCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem("samarpanUser") || "null");
+  } catch {
+    return null;
+  }
+}
+
+// feature lock helper (Host, Create, etc.)
+function requireLogin(message = "Please log in to use this feature.") {
+  const user = getCurrentUser();
+  if (!user) {
+    openAuthModal();
+    if (authStatus) {
+      authStatus.style.color = "#b91c1c";
+      authStatus.textContent = message;
+    }
+    return false;
+  }
+  return true;
+}
+
+// -------- bind open/close triggers --------
+authTriggers
+  .filter(Boolean)
+  .forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAuthModal();
+    })
+  );
+
+if (authCloseBtn) authCloseBtn.addEventListener("click", closeAuthModal);
+
+if (authOverlay) {
+  authOverlay.addEventListener("click", (e) => {
+    if (e.target === authOverlay) closeAuthModal();
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAuthModal();
+});
+
+// ================= LOGIN <-> SIGNUP TABS =================
+if (tabLogin && tabSignup && loginPanel && signupPanel) {
+  tabLogin.addEventListener("click", () => {
+    tabLogin.classList.add("auth-tab-active");
+    tabSignup.classList.remove("auth-tab-active");
+    loginPanel.style.display = "block";
+    signupPanel.style.display = "none";
+    if (authTitle) authTitle.textContent = "Log in";
+    if (authSubtitle)
+      authSubtitle.textContent = "Sign in to continue using Samarpan.";
+    if (authStatus) authStatus.textContent = "";
+  });
+
+  tabSignup.addEventListener("click", () => {
+    tabSignup.classList.add("auth-tab-active");
+    tabLogin.classList.remove("auth-tab-active");
+    loginPanel.style.display = "none";
+    signupPanel.style.display = "block";
+    if (authTitle) authTitle.textContent = "Create your Samarpan account";
+    if (authSubtitle)
+      authSubtitle.textContent =
+        "Tournaments, quizzes and rating in one place.";
+    if (authStatus) authStatus.textContent = "";
+  });
+}
+
+// bottom text: "Don't have an account? Sign up"
+if (authGoSignup && tabSignup) {
+  authGoSignup.addEventListener("click", (e) => {
+    e.preventDefault();
+    tabSignup.click();
+  });
+}
+
+// ================= SIGNUP request =================
+const signupBtn = document.getElementById("signupSubmit");
+if (signupBtn) {
+  signupBtn.addEventListener("click", async () => {
+    const name = document.getElementById("signupName")?.value.trim();
+    const email = document.getElementById("signupEmail")?.value.trim();
+    const password = document.getElementById("signupPassword")?.value.trim();
+
+    if (!name || !email || !password) {
+      if (authStatus) {
+        authStatus.style.color = "#b91c1c";
+        authStatus.textContent = "Please fill all fields.";
+      }
+      return;
+    }
+    if (authStatus) {
+      authStatus.style.color = "#4b5563";
+      authStatus.textContent = "Creating account...";
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (authStatus) {
+          authStatus.style.color = "#b91c1c";
+          authStatus.textContent = data.error || "Signup failed.";
+        }
+        return;
+      }
+
+      if (authStatus) {
+        authStatus.style.color = "#16a34a";
+        authStatus.textContent = "Signup successful! You can log in now.";
+      }
+      if (tabLogin) tabLogin.click(); // switch to login tab
+    } catch (err) {
+      console.error(err);
+      if (authStatus) {
+        authStatus.style.color = "#b91c1c";
+        authStatus.textContent = "Network error. Please try again.";
+      }
+    }
+  });
+}
+
+// ================= LOGIN request =================
+const loginBtn = document.getElementById("loginSubmit");
+if (loginBtn) {
+  loginBtn.addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail")?.value.trim();
+    const password = document.getElementById("loginPassword")?.value.trim();
+
+    if (!email || !password) {
+      if (authStatus) {
+        authStatus.style.color = "#b91c1c";
+        authStatus.textContent = "Enter email and password.";
+      }
+      return;
+    }
+    if (authStatus) {
+      authStatus.style.color = "#4b5563";
+      authStatus.textContent = "Logging in...";
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (authStatus) {
+          authStatus.style.color = "#b91c1c";
+          authStatus.textContent = data.error || "Login failed.";
+        }
+        return;
+      }
+
+      if (authStatus) {
+        authStatus.style.color = "#16a34a";
+        authStatus.textContent = "Login successful!";
+      }
+
+      // user ko localStorage me save karo
+      localStorage.setItem("samarpanUser", JSON.stringify(data));
+
+      // profile name/email update (agar HTML me IDs diye ho)
+      const profileName = document.getElementById("profileName");
+      const profileEmail = document.getElementById("profileEmail");
+      if (profileName && data.name) profileName.textContent = data.name;
+      if (profileEmail && data.email) profileEmail.textContent = data.email;
+
+      setTimeout(() => {
+        closeAuthModal();
+      }, 700);
+    } catch (err) {
+      console.error(err);
+      if (authStatus) {
+        authStatus.style.color = "#b91c1c";
+        authStatus.textContent = "Network error. Please try again.";
+      }
+    }
+  });
+}
+
+// ================= SOCIAL buttons (UI only) =================
+["socialGoogle", "socialMicrosoft", "socialFacebook"].forEach((id) => {
+  const btn = document.getElementById(id);
+  if (btn) {
+    btn.addEventListener("click", () => {
+      if (authStatus) {
+        authStatus.style.color = "#f59e0b";
+        authStatus.textContent =
+          "Social login coming soon (demo UI only for now).";
+      }
+    });
+  }
+});
+
+// ============= PROTECT IMPORTANT FEATURES =============
+// Note: ye IDs tum apne HTML me de sakte ho agar feature lock chahiye.
+const protectedActions = [
+  "btnHostTop",          // top Host quiz button
+  "toolCreateManual",    // dashboard -> Create quiz (manual)
+  "toolCreateAI",        // dashboard -> Create quiz (AI)
+  "toolLiveTournaments", // dashboard -> Live tournaments
+];
+
+protectedActions.forEach((id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.addEventListener("click", (e) => {
+    if (!requireLogin()) {
+      e.preventDefault();
+      e.stopPropagation();
+    } else {
+      // yahan future me: actual navigation / action call kar sakte ho
+      // e.g. showView("view-create");
+    }
+  });
+});
