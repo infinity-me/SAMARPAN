@@ -56,11 +56,15 @@ app.post("/api/signup", async (req, res) => {
     });
 
     return res.json({
-      message: "Signup Successful",
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-    });
+  message: "Signup Successful",
+  userId: user._id,
+  name: user.name,
+  email: user.email,
+  globalRating: user.globalRating,
+  ratings: user.ratings,
+  xp: user.xp
+});
+
   } catch (err) {
     console.error("Signup error:", err);
     return res.status(500).json({ error: "Signup failed" });
@@ -83,11 +87,15 @@ app.post("/api/login", async (req, res) => {
     }
 
     res.json({
-      message: "Login Successful",
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-    });
+  message: "Login Successful",
+  userId: user._id,
+  name: user.name,
+  email: user.email,
+  globalRating: user.globalRating,
+  ratings: user.ratings,
+  xp: user.xp
+});
+
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Login failed" });

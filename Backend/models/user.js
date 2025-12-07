@@ -11,8 +11,27 @@ const modeRatingSchema = new mongoose.Schema(
 
 const userSchema = new mongoose.Schema(
   {
+    ratings: {
+  type: [modeRatingSchema],
+  validate: [
+    arr => arr.length === 3,
+    "Ratings must contain exactly 3 modes"
+  ],
+  default: [
+    { mode: "rapid", rating: 1200, peak: 1200 },
+    { mode: "blitz", rating: 1200, peak: 1200 },
+    { mode: "casual", rating: 0, peak: 0 }
+  ],
+},
+
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { 
+  type: String, 
+  required: true, 
+  unique: true,
+  lowercase: true,
+  index: true
+},
     passwordHash: { type: String, required: true },
     globalRating: { type: Number, default: 1200 },
     ratings: {
