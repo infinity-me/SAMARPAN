@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { generateQuizQuestions } = require("../services/gptService");
 const Quiz = require("../models/Quiz");
-const User = require("../models/user"); // ✅ IMPORTANT
+const User = require("../models/User"); // ✅ IMPORTANT
 
 // ✅ Generate AI Quiz (Schema Compatible)
 router.post("/generate-quiz", async (req, res) => {

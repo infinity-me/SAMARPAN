@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 // Models
-const User = require("./models/user"); 
+const User = require("./models/User"); 
 // agar baad me Quiz, GameSession, RatingHistory use karoge to yahan add kar lena
 
 // ====== Initialize App ======
