@@ -389,19 +389,24 @@ if (aiGenerateBtn) {
   });
 }
 
-// ================== SOCIAL BUTTONS (CURRENTLY DEMO UI) ==================
-["socialGoogle", "socialMicrosoft", "socialFacebook"].forEach((id) => {
-  const btn = document.getElementById(id);
-  if (!btn) return;
+// ================= SOCIAL LOGIN =================
 
-  btn.addEventListener("click", () => {
-    if (authStatus) {
-      authStatus.style.color = "#f59e0b";
-      authStatus.textContent =
-        "Social login coming soon (demo UI only for now).";
-    }
+// Google sign-in
+const socialGoogle = document.getElementById("socialGoogle");
+if (socialGoogle) {
+  socialGoogle.addEventListener("click", () => {
+    window.location.href = `${API_BASE}/auth/google`;
   });
-});
+}
+
+// Facebook sign-in
+const socialFacebook = document.getElementById("socialFacebook");
+if (socialFacebook) {
+  socialFacebook.addEventListener("click", () => {
+    window.location.href = `${API_BASE}/auth/facebook`;
+  });
+}
+
 
 // ================== PROTECT IMPORTANT FEATURES ==================
 const protectedActions = [
