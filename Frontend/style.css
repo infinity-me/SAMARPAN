@@ -907,6 +907,25 @@ body {
   font-weight: 600;
 }
 
+.top-profile {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  overflow: hidden;      /* ⭐ image crop circular */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* jo image hum innerHTML se daal rahe hain */
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+
 .profile-sub {
   margin: 0.1rem 0 0;
   font-size: 0.86rem;

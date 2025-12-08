@@ -144,18 +144,19 @@ app.post("/api/login", async (req, res) => {
 // =============== PASSPORT SOCIAL STRATEGIES ==========
 // =====================================================
 
-// ---------- GOOGLE STRATEGY ----------
+// ========== GOOGLE STRATEGY ==========
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL, // e.g. http://localhost:5000/auth/google/callback
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
         const name = profile.displayName;
+        const avatar = profile.photos?.[0]?.value; // ⭐ DP URL
 
         if (!email) return done(new Error("No email from Google"), null);
 
@@ -165,40 +166,45 @@ passport.use(
           user = await User.create({
             name,
             email,
-            passwordHash: null, // social login -> no local password
+            avatar,
             provider: "google",
             googleId: profile.id,
           });
         } else {
+          // update missing info
           if (!user.provider) user.provider = "google";
           if (!user.googleId) user.googleId = profile.id;
+          if (!user.avatar && avatar) user.avatar = avatar;
           await user.save();
         }
 
         done(null, user);
       } catch (err) {
-        console.error("Google strategy error:", err);
         done(err, null);
       }
     }
   )
 );
 
-// ---------- FACEBOOK STRATEGY ----------
+
+// ========== FACEBOOK STRATEGY ==========
 passport.use(
   new FacebookStrategy(
     {
       clientID: process.env.FACEBOOK_CLIENT_ID,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL, // e.g. http://localhost:5000/auth/facebook/callback
-      profileFields: ["id", "displayName", "emails"],
+      callbackURL: process.env.FACEBOOK_CALLBACK_URL,
+      profileFields: ["id", "displayName", "emails", "picture.type(large)"],
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
         const name = profile.displayName;
+        const avatar =
+          profile.photos && profile.photos[0] && profile.photos[0].value
+            ? profile.photos[0].value
+            : null;
 
-        // Facebook kabhi-kabhi email nahi deta; simple version me hum error de rahe
         if (!email) return done(new Error("No email from Facebook"), null);
 
         let user = await User.findOne({ email });
@@ -207,41 +213,50 @@ passport.use(
           user = await User.create({
             name,
             email,
-            passwordHash: null,
+            avatar,
             provider: "facebook",
             facebookId: profile.id,
           });
         } else {
           if (!user.provider) user.provider = "facebook";
           if (!user.facebookId) user.facebookId = profile.id;
+          if (!user.avatar && avatar) user.avatar = avatar;
           await user.save();
         }
 
         done(null, user);
       } catch (err) {
-        console.error("Facebook strategy error:", err);
         done(err, null);
       }
     }
   )
 );
 
-// =====================================================
-// =============== SOCIAL LOGIN REDIRECT HELPER =========
-// =====================================================
 
+// ========== SOCIAL LOGIN COMMON REDIRECT HELPER ==========
 function sendSocialLoginRedirect(req, res) {
   const user = req.user;
-  const token = createJwtForUser(user);
+
+  const token = jwt.sign(
+    {
+      userId: user._id,
+      email: user.email,
+      name: user.name,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
 
   const redirectUrl =
-    FRONTEND_URL +
+    process.env.FRONTEND_URL +
     `?token=${encodeURIComponent(token)}` +
     `&name=${encodeURIComponent(user.name || "")}` +
-    `&email=${encodeURIComponent(user.email || "")}`;
+    `&email=${encodeURIComponent(user.email || "")}` +
+    `&avatar=${encodeURIComponent(user.avatar || "")}`; // ⭐ yahan se DP jaa rahi
 
   return res.redirect(redirectUrl);
 }
+
 
 // =====================================================
 // =============== SOCIAL AUTH ROUTES ===================

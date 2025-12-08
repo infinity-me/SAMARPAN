@@ -21,6 +21,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const existing = getCurrentUser();
   if (existing) updateUIOnLogin(existing);
 });
+// SOCIAL LOGIN RETURN HANDLER
+const urlParams = new URLSearchParams(window.location.search);
+const token  = urlParams.get("token");
+const name   = urlParams.get("name");
+const email  = urlParams.get("email");
+
+if (token && email) {
+    // backend se aaya JWT token + user info localStorage me save karo
+    localStorage.setItem("samarpanUser", JSON.stringify({ token, name, email }));
+    // UI ko logged-in state me le jao
+    updateUIOnLogin({ name, email });
+    // URL se ?token=... etc hata do
+    history.replaceState(null, "", window.location.pathname);
+}
+
 
 
 // ================== BASIC TAB SWITCH + ANIMATION ==================
@@ -90,7 +105,7 @@ if (yearSpan) {
 
 // ================== AUTH + MODAL LOGIC ==================
 
-// ---- UI update after login ----
+// ===== UI UPDATE AFTER LOGIN =====
 function updateUIOnLogin(user) {
   const sidebarName = document.querySelector(".user-name");
   const sidebarRole = document.querySelector(".user-role");
@@ -100,19 +115,26 @@ function updateUIOnLogin(user) {
   const displayName = user.name || user.email || "User";
   const firstLetter = displayName.charAt(0).toUpperCase();
 
-  // Sidebar info
+  // sidebar name
   if (sidebarName) sidebarName.textContent = displayName;
   if (sidebarRole) sidebarRole.textContent = "Logged in";
 
-  // Top avatar
-  if (avatarTop) avatarTop.textContent = firstLetter;
+  // TOP AVATAR → image agar available hai, warna first letter
+  if (avatarTop) {
+    if (user.avatar) {
+      avatarTop.innerHTML = `<img src="${user.avatar}" class="profile-img" alt="avatar">`;
+    } else {
+      avatarTop.textContent = firstLetter;
+    }
+  }
 
-  // Top "Sign up / Log in" -> "Profile"
+  // "Sign up / Log in" button ko Profile bana do
   if (authBtnTop) {
     authBtnTop.textContent = "Profile";
     authBtnTop.classList.add("top-btn-loggedin");
   }
 }
+
 
 // ---- modal elements (Kahoot style auth card) ----
 const authOverlay  = document.getElementById("authOverlay");
@@ -451,6 +473,25 @@ protectedActions.forEach((id) => {
     }
   });
 });
+
+// ========== SOCIAL LOGIN RETURN HANDLER ==========
+(function handleSocialCallback() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token  = urlParams.get("token");
+  const name   = urlParams.get("name");
+  const email  = urlParams.get("email");
+  const avatar = urlParams.get("avatar");
+
+  if (token && email) {
+    const userObj = { token, name, email, avatar };
+    localStorage.setItem("samarpanUser", JSON.stringify(userObj));
+    updateUIOnLogin(userObj);
+
+    // URL clean kar do (?token=... hatao)
+    history.replaceState(null, "", window.location.pathname);
+  }
+})();
+
 
 // Host button: login required, then host view
 if (btnHostTop) {
