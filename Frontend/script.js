@@ -1,3 +1,5 @@
+
+
 // ================= TAB SWITCH + ANIMATION =================
 const views = document.querySelectorAll(".view");
 const viewTriggers = document.querySelectorAll("[data-view]");
@@ -65,7 +67,6 @@ if (yearSpan) {
 }
 
 // ================= AUTH + MODAL LOGIC =================
-const API_BASE = "http://localhost:5000";
 
 // --- modal elements (Kahoot style card) ---
 const authOverlay  = document.getElementById("authOverlay");
@@ -182,6 +183,8 @@ if (authGoSignup && tabSignup) {
   });
 }
 
+const API_BASE = "https://samarpan-svm9.onrender.com";
+
 // ================= SIGNUP request =================
 const signupBtn = document.getElementById("signupSubmit");
 if (signupBtn) {
@@ -294,6 +297,84 @@ if (loginBtn) {
     }
   });
 }
+
+// ================= AI QUIZ (GPT) request =================
+const aiGenerateBtn = document.getElementById("aiGenerateBtn");
+const aiStatus = document.getElementById("aiStatus");
+
+if (aiGenerateBtn) {
+  aiGenerateBtn.addEventListener("click", async () => {
+    // ensure user is logged in
+    if (!requireLogin("Please log in to generate AI quizzes.")) return;
+
+    const currentUser = getCurrentUser();
+
+    const title =
+      document.getElementById("aiTitle")?.value.trim() || "AI Quiz";
+    const topic = document.getElementById("aiTopic")?.value.trim();
+    const difficulty =
+      document.getElementById("aiDifficulty")?.value || "medium";
+    const countRaw = document.getElementById("aiCount")?.value;
+    const count = Number(countRaw) || 5;
+
+    if (!topic) {
+      if (aiStatus) {
+        aiStatus.style.color = "#b91c1c";
+        aiStatus.textContent = "Please enter a topic for the quiz.";
+      }
+      return;
+    }
+
+    if (aiStatus) {
+      aiStatus.style.color = "#4b5563";
+      aiStatus.textContent = "Generating AI quiz...";
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/ai/generate-quiz`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          topic,
+          difficulty,
+          count,
+          // backend hamara email ya ObjectId dono se handle kar raha hai
+          userId: currentUser?.userId || currentUser?.email,
+          tags: [topic.toLowerCase()],
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (aiStatus) {
+          aiStatus.style.color = "#b91c1c";
+          aiStatus.textContent = data.error || "AI quiz generation failed.";
+        }
+        return;
+      }
+
+      // store last generated quiz locally (optional)
+      localStorage.setItem("samarpanLastAIQuiz", JSON.stringify(data.quiz));
+
+      if (aiStatus) {
+        aiStatus.style.color = "#16a34a";
+        aiStatus.textContent = "AI quiz generated successfully!";
+      }
+
+      console.log("AI Quiz:", data.quiz);
+      // TODO: yahan se tum quiz ko UI me render kar sakte ho (question list etc.)
+    } catch (err) {
+      console.error("AI Quiz Error (frontend):", err);
+      if (aiStatus) {
+        aiStatus.style.color = "#b91c1c";
+        aiStatus.textContent = "Network error while generating quiz.";
+      }
+    }
+  });
+}
+
 
 // ================= SOCIAL buttons (UI only) =================
 ["socialGoogle", "socialMicrosoft", "socialFacebook"].forEach((id) => {
