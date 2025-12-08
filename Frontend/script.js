@@ -1,3 +1,28 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+
+  if (token) {
+    const user = {
+      token,
+      name: params.get("name"),
+      email: params.get("email"),
+      provider: "social"
+    };
+
+    localStorage.setItem("samarpanUser", JSON.stringify(user));
+    updateUIOnLogin(user);
+
+    // URL clean karo
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  // agar already logged in hai to UI update
+  const existing = getCurrentUser();
+  if (existing) updateUIOnLogin(existing);
+});
+
+
 // ================== BASIC TAB SWITCH + ANIMATION ==================
 const views        = document.querySelectorAll(".view");
 const viewTriggers = document.querySelectorAll("[data-view]");

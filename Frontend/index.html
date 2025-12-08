@@ -812,7 +812,6 @@
   </div>
 
   <!-- ============ AUTH MODAL (LOGIN / SIGNUP) ============ -->
-  <!-- ============ AUTH MODAL (KAHOOT STYLE) ============ -->
 <div class="auth-overlay hidden" id="authOverlay">
   <div class="auth-modal auth-kahoot-card">
     <button class="auth-close" id="authCloseBtn">&times;</button>
@@ -824,11 +823,11 @@
 
     <!-- Social providers row -->
     <div class="auth-social-row auth-social-row-top">
-  <button class="auth-social-pill" id="socialGoogle">
-    <span class="auth-social-icon">G</span>
+  <button class="auth-social-pill" type="button" id="socialGoogle" onclick="window.location.href='http://localhost:5000/auth/google'">
+    <span class="auth-social-icon" >G</span>
     <span>Google</span>
   </button>
-  <button class="auth-social-pill" id="socialFacebook">
+  <button class="auth-social-pill" type="button" id="socialFacebook" onclick="window.location.href='http://localhost:5000/auth/facebook'">
     <span class="auth-social-icon">f</span>
     <span>Facebook</span>
   </button>
