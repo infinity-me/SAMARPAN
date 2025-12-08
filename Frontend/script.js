@@ -1,52 +1,49 @@
-
-
-// ================= TAB SWITCH + ANIMATION =================
-const views = document.querySelectorAll(".view");
+// ================== BASIC TAB SWITCH + ANIMATION ==================
+const views        = document.querySelectorAll(".view");
 const viewTriggers = document.querySelectorAll("[data-view]");
-const sideLinks = document.querySelectorAll(".side-link");
-const flashBar = document.getElementById("switchFlash");
+const sideLinks    = document.querySelectorAll(".side-link");
+const flashBar     = document.getElementById("switchFlash");
 
+// helper: programmatically view change karne ke liye
+function showView(viewName) {
+  const targetId = `view-${viewName}`;
+  const nextView = document.getElementById(targetId);
+  if (!nextView) return;
+
+  views.forEach((v) => v.classList.remove("view-active", "view-anim-in"));
+  nextView.classList.add("view-active");
+  void nextView.offsetWidth;          // reflow for animation
+  nextView.classList.add("view-anim-in");
+
+  if (flashBar) {
+    flashBar.classList.remove("flash-go");
+    void flashBar.offsetWidth;
+    flashBar.classList.add("flash-go");
+  }
+}
+
+// click se view change
 viewTriggers.forEach((trigger) => {
   trigger.addEventListener("click", (event) => {
-    // kuch buttons (login etc.) sirf modal kholte hain,
-    // agar unka data-view exist nahi karta to simply ignore.
     event.preventDefault();
 
     const target = trigger.getAttribute("data-view");
-    if (!target) return;
+    if (!target) return; // kuch buttons sirf modal ke liye ho sakte hain
 
-    const targetId = `view-${target}`;
-    const nextView = document.getElementById(targetId);
-    if (!nextView) return;
-
-    // sab views se active + animation class hatao
-    views.forEach((v) => v.classList.remove("view-active", "view-anim-in"));
-
-    // naya view dikhao
-    nextView.classList.add("view-active");
-    // reflow for restart animation
-    void nextView.offsetWidth;
-    nextView.classList.add("view-anim-in");
+    showView(target);
 
     // sidebar active state
     if (trigger.classList.contains("side-link")) {
       sideLinks.forEach((b) => b.classList.remove("active"));
       trigger.classList.add("active");
     }
-
-    // neon flash bar
-    if (flashBar) {
-      flashBar.classList.remove("flash-go");
-      void flashBar.offsetWidth;
-      flashBar.classList.add("flash-go");
-    }
   });
 });
 
-// ================= SIDEBAR TOGGLE (mobile) =================
-const sidebar = document.querySelector(".sidebar");
+// ================== SIDEBAR TOGGLE (MOBILE) ==================
+const sidebar       = document.querySelector(".sidebar");
 const sidebarToggle = document.getElementById("sidebarToggle");
-const main = document.querySelector(".main");
+const main          = document.querySelector(".main");
 
 if (sidebar && sidebarToggle) {
   sidebarToggle.addEventListener("click", () => {
@@ -60,15 +57,39 @@ if (main && sidebar) {
   });
 }
 
-// ================= YEAR IN FOOTER =================
+// ================== YEAR IN FOOTER (optional) ==================
 const yearSpan = document.getElementById("year");
 if (yearSpan) {
   yearSpan.textContent = new Date().getFullYear();
 }
 
-// ================= AUTH + MODAL LOGIC =================
+// ================== AUTH + MODAL LOGIC ==================
 
-// --- modal elements (Kahoot style card) ---
+// ---- UI update after login ----
+function updateUIOnLogin(user) {
+  const sidebarName = document.querySelector(".user-name");
+  const sidebarRole = document.querySelector(".user-role");
+  const avatarTop   = document.getElementById("btnAvatarTop");
+  const authBtnTop  = document.getElementById("btnAuthTop");
+
+  const displayName = user.name || user.email || "User";
+  const firstLetter = displayName.charAt(0).toUpperCase();
+
+  // Sidebar info
+  if (sidebarName) sidebarName.textContent = displayName;
+  if (sidebarRole) sidebarRole.textContent = "Logged in";
+
+  // Top avatar
+  if (avatarTop) avatarTop.textContent = firstLetter;
+
+  // Top "Sign up / Log in" -> "Profile"
+  if (authBtnTop) {
+    authBtnTop.textContent = "Profile";
+    authBtnTop.classList.add("top-btn-loggedin");
+  }
+}
+
+// ---- modal elements (Kahoot style auth card) ----
 const authOverlay  = document.getElementById("authOverlay");
 const authCloseBtn = document.getElementById("authCloseBtn");
 const tabLogin     = document.getElementById("tabLogin");
@@ -78,23 +99,19 @@ const signupPanel  = document.getElementById("signupPanel");
 const authTitle    = document.getElementById("authTitle");
 const authSubtitle = document.getElementById("authSubtitle");
 const authStatus   = document.getElementById("authStatus");
-
-// neeche text-wala Sign up button
 const authGoSignup = document.getElementById("authGoSignup");
 
-// teen triggers: Host button / Login button / Avatar
-const authTriggers = [
-  document.getElementById("btnHostTop"),
-  document.getElementById("btnAuthTop"),
-  document.getElementById("btnAvatarTop"),
-];
+const btnHostTop   = document.getElementById("btnHostTop");
+const btnAuthTop   = document.getElementById("btnAuthTop");
+const btnAvatarTop = document.getElementById("btnAvatarTop");
+const btnLogout = document.getElementById("btnLogout");
 
-// -------- open / close helpers --------
+// ---- open / close helpers ----
 function openAuthModal() {
   if (!authOverlay) return;
   authOverlay.classList.remove("hidden");
   if (authStatus) {
-    authStatus.style.color = "#b91c1c"; // default red-ish for errors later
+    authStatus.style.color = "#b91c1c"; // default red for future errors
     authStatus.textContent = "";
   }
 }
@@ -104,7 +121,7 @@ function closeAuthModal() {
   authOverlay.classList.add("hidden");
 }
 
-// current user helper
+// ---- current user helper ----
 function getCurrentUser() {
   try {
     return JSON.parse(localStorage.getItem("samarpanUser") || "null");
@@ -113,7 +130,7 @@ function getCurrentUser() {
   }
 }
 
-// feature lock helper (Host, Create, etc.)
+// ---- feature lock helper (Host, Create, etc.) ----
 function requireLogin(message = "Please log in to use this feature.") {
   const user = getCurrentUser();
   if (!user) {
@@ -127,39 +144,29 @@ function requireLogin(message = "Please log in to use this feature.") {
   return true;
 }
 
-// -------- bind open/close triggers --------
-authTriggers
-  .filter(Boolean)
-  .forEach((btn) =>
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      openAuthModal();
-    })
-  );
-
-if (authCloseBtn) authCloseBtn.addEventListener("click", closeAuthModal);
-
+// ---- close modal events ----
+if (authCloseBtn) {
+  authCloseBtn.addEventListener("click", closeAuthModal);
+}
 if (authOverlay) {
   authOverlay.addEventListener("click", (e) => {
     if (e.target === authOverlay) closeAuthModal();
   });
 }
-
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeAuthModal();
 });
 
-// ================= LOGIN <-> SIGNUP TABS =================
+// ================== LOGIN <-> SIGNUP TABS ==================
 if (tabLogin && tabSignup && loginPanel && signupPanel) {
   tabLogin.addEventListener("click", () => {
     tabLogin.classList.add("auth-tab-active");
     tabSignup.classList.remove("auth-tab-active");
     loginPanel.style.display = "block";
     signupPanel.style.display = "none";
-    if (authTitle) authTitle.textContent = "Log in";
-    if (authSubtitle)
-      authSubtitle.textContent = "Sign in to continue using Samarpan.";
-    if (authStatus) authStatus.textContent = "";
+    if (authTitle)    authTitle.textContent    = "Log in";
+    if (authSubtitle) authSubtitle.textContent = "Sign in to continue using Samarpan.";
+    if (authStatus)   authStatus.textContent   = "";
   });
 
   tabSignup.addEventListener("click", () => {
@@ -167,15 +174,13 @@ if (tabLogin && tabSignup && loginPanel && signupPanel) {
     tabLogin.classList.remove("auth-tab-active");
     loginPanel.style.display = "none";
     signupPanel.style.display = "block";
-    if (authTitle) authTitle.textContent = "Create your Samarpan account";
-    if (authSubtitle)
-      authSubtitle.textContent =
-        "Tournaments, quizzes and rating in one place.";
-    if (authStatus) authStatus.textContent = "";
+    if (authTitle)    authTitle.textContent    = "Create your Samarpan account";
+    if (authSubtitle) authSubtitle.textContent = "Tournaments, quizzes and rating in one place.";
+    if (authStatus)   authStatus.textContent   = "";
   });
 }
 
-// bottom text: "Don't have an account? Sign up"
+// bottom text link: "Don’t have an account? Sign up"
 if (authGoSignup && tabSignup) {
   authGoSignup.addEventListener("click", (e) => {
     e.preventDefault();
@@ -183,14 +188,15 @@ if (authGoSignup && tabSignup) {
   });
 }
 
+// ================== API BASE URL ==================
 const API_BASE = "https://samarpan-svm9.onrender.com";
 
-// ================= SIGNUP request =================
+// ================== SIGNUP REQUEST ==================
 const signupBtn = document.getElementById("signupSubmit");
 if (signupBtn) {
   signupBtn.addEventListener("click", async () => {
-    const name = document.getElementById("signupName")?.value.trim();
-    const email = document.getElementById("signupEmail")?.value.trim();
+    const name     = document.getElementById("signupName")?.value.trim();
+    const email    = document.getElementById("signupEmail")?.value.trim();
     const password = document.getElementById("signupPassword")?.value.trim();
 
     if (!name || !email || !password) {
@@ -200,6 +206,7 @@ if (signupBtn) {
       }
       return;
     }
+
     if (authStatus) {
       authStatus.style.color = "#4b5563";
       authStatus.textContent = "Creating account...";
@@ -225,9 +232,10 @@ if (signupBtn) {
         authStatus.style.color = "#16a34a";
         authStatus.textContent = "Signup successful! You can log in now.";
       }
+
       if (tabLogin) tabLogin.click(); // switch to login tab
     } catch (err) {
-      console.error(err);
+      console.error("Signup error:", err);
       if (authStatus) {
         authStatus.style.color = "#b91c1c";
         authStatus.textContent = "Network error. Please try again.";
@@ -236,11 +244,11 @@ if (signupBtn) {
   });
 }
 
-// ================= LOGIN request =================
+// ================== LOGIN REQUEST ==================
 const loginBtn = document.getElementById("loginSubmit");
 if (loginBtn) {
   loginBtn.addEventListener("click", async () => {
-    const email = document.getElementById("loginEmail")?.value.trim();
+    const email    = document.getElementById("loginEmail")?.value.trim();
     const password = document.getElementById("loginPassword")?.value.trim();
 
     if (!email || !password) {
@@ -250,6 +258,7 @@ if (loginBtn) {
       }
       return;
     }
+
     if (authStatus) {
       authStatus.style.color = "#4b5563";
       authStatus.textContent = "Logging in...";
@@ -271,6 +280,7 @@ if (loginBtn) {
         return;
       }
 
+      // Success UI
       if (authStatus) {
         authStatus.style.color = "#16a34a";
         authStatus.textContent = "Login successful!";
@@ -279,17 +289,20 @@ if (loginBtn) {
       // user ko localStorage me save karo
       localStorage.setItem("samarpanUser", JSON.stringify(data));
 
-      // profile name/email update (agar HTML me IDs diye ho)
-      const profileName = document.getElementById("profileName");
+      // UI ko login state me shift karo
+      updateUIOnLogin(data);
+
+      // optional: profile details fill (agar tumne IDs use kiye ho)
+      const profileName  = document.getElementById("profileName");
       const profileEmail = document.getElementById("profileEmail");
-      if (profileName && data.name) profileName.textContent = data.name;
+      if (profileName && data.name)  profileName.textContent  = data.name;
       if (profileEmail && data.email) profileEmail.textContent = data.email;
 
       setTimeout(() => {
         closeAuthModal();
       }, 700);
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       if (authStatus) {
         authStatus.style.color = "#b91c1c";
         authStatus.textContent = "Network error. Please try again.";
@@ -298,24 +311,24 @@ if (loginBtn) {
   });
 }
 
-// ================= AI QUIZ (GPT) request =================
+// ================== AI QUIZ (GPT) REQUEST ==================
 const aiGenerateBtn = document.getElementById("aiGenerateBtn");
-const aiStatus = document.getElementById("aiStatus");
+const aiStatus      = document.getElementById("aiStatus");
 
 if (aiGenerateBtn) {
   aiGenerateBtn.addEventListener("click", async () => {
-    // ensure user is logged in
+    // login required for AI quiz
     if (!requireLogin("Please log in to generate AI quizzes.")) return;
 
     const currentUser = getCurrentUser();
 
-    const title =
-      document.getElementById("aiTitle")?.value.trim() || "AI Quiz";
-    const topic = document.getElementById("aiTopic")?.value.trim();
-    const difficulty =
-      document.getElementById("aiDifficulty")?.value || "medium";
-    const countRaw = document.getElementById("aiCount")?.value;
-    const count = Number(countRaw) || 5;
+    const titleRaw      = document.getElementById("aiTitle")?.value.trim();
+    const topic         = document.getElementById("aiTopic")?.value.trim();
+    const difficulty    = document.getElementById("aiDifficulty")?.value || "medium";
+    const countRaw      = document.getElementById("aiCount")?.value;
+    const questionCount = Number(countRaw) || 5;
+
+    const title = titleRaw || "AI Quiz";
 
     if (!topic) {
       if (aiStatus) {
@@ -338,9 +351,8 @@ if (aiGenerateBtn) {
           title,
           topic,
           difficulty,
-          count,
-          // backend hamara email ya ObjectId dono se handle kar raha hai
-          userId: currentUser?.userId || currentUser?.email,
+          count: questionCount,
+          userId: currentUser?.userId || currentUser?._id || currentUser?.email,
           tags: [topic.toLowerCase()],
         }),
       });
@@ -355,8 +367,10 @@ if (aiGenerateBtn) {
         return;
       }
 
-      // store last generated quiz locally (optional)
-      localStorage.setItem("samarpanLastAIQuiz", JSON.stringify(data.quiz));
+      // AI quiz ko localStorage me store kar lo (future use ke liye)
+      if (data.quiz) {
+        localStorage.setItem("samarpanLastAIQuiz", JSON.stringify(data.quiz));
+      }
 
       if (aiStatus) {
         aiStatus.style.color = "#16a34a";
@@ -375,25 +389,22 @@ if (aiGenerateBtn) {
   });
 }
 
-
-// ================= SOCIAL buttons (UI only) =================
+// ================== SOCIAL BUTTONS (CURRENTLY DEMO UI) ==================
 ["socialGoogle", "socialMicrosoft", "socialFacebook"].forEach((id) => {
   const btn = document.getElementById(id);
-  if (btn) {
-    btn.addEventListener("click", () => {
-      if (authStatus) {
-        authStatus.style.color = "#f59e0b";
-        authStatus.textContent =
-          "Social login coming soon (demo UI only for now).";
-      }
-    });
-  }
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    if (authStatus) {
+      authStatus.style.color = "#f59e0b";
+      authStatus.textContent =
+        "Social login coming soon (demo UI only for now).";
+    }
+  });
 });
 
-// ============= PROTECT IMPORTANT FEATURES =============
-// Note: ye IDs tum apne HTML me de sakte ho agar feature lock chahiye.
+// ================== PROTECT IMPORTANT FEATURES ==================
 const protectedActions = [
-  "btnHostTop",          // top Host quiz button
   "toolCreateManual",    // dashboard -> Create quiz (manual)
   "toolCreateAI",        // dashboard -> Create quiz (AI)
   "toolLiveTournaments", // dashboard -> Live tournaments
@@ -407,9 +418,128 @@ protectedActions.forEach((id) => {
     if (!requireLogin()) {
       e.preventDefault();
       e.stopPropagation();
-    } else {
-      // yahan future me: actual navigation / action call kar sakte ho
-      // e.g. showView("view-create");
     }
   });
 });
+
+// Host button: login required, then host view
+if (btnHostTop) {
+  btnHostTop.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (!requireLogin()) return;
+    showView("host");
+  });
+}
+
+// Auth button: if not logged in -> modal, else -> profile view
+if (btnAuthTop) {
+  btnAuthTop.addEventListener("click", (e) => {
+    e.preventDefault();
+    const user = getCurrentUser();
+    if (user) {
+      showView("profile");
+    } else {
+      openAuthModal();
+    }
+  });
+}
+
+// Avatar: same behaviour as profile
+if (btnAvatarTop) {
+  btnAvatarTop.addEventListener("click", (e) => {
+    e.preventDefault();
+    const user = getCurrentUser();
+    if (user) {
+      showView("profile");
+    } else {
+      openAuthModal();
+    }
+  });
+}
+
+// ================== AUTO-LOGIN ON PAGE LOAD ==================
+document.addEventListener("DOMContentLoaded", () => {
+  const existing = getCurrentUser();
+  if (existing) {
+    updateUIOnLogin(existing);
+  }
+});
+// ===== LOGOUT LOGIC =====
+
+
+function logoutUser() {
+  // local storage se user hatao
+  localStorage.removeItem("samarpanUser");
+
+  // basic UI reset
+  const sidebarName = document.querySelector(".user-name");
+  const sidebarRole = document.querySelector(".user-role");
+  const avatarTop   = document.getElementById("btnAvatarTop");
+  const authBtnTop  = document.getElementById("btnAuthTop");
+
+  if (sidebarName) sidebarName.textContent = "Aman";
+  if (sidebarRole) sidebarRole.textContent = "Host";
+  if (avatarTop)   avatarTop.textContent   = "A";
+
+  if (authBtnTop) {
+    authBtnTop.textContent = "Sign up / Log in";
+    authBtnTop.classList.remove("top-btn-loggedin");
+  }
+
+  if (btnLogout) {
+    btnLogout.style.display = "none";
+  }
+
+  // optional: dashboard pe wapas le jao
+  showView("dashboard");
+}
+if (btnLogout) {
+  btnLogout.addEventListener("click", (e) => {
+    e.preventDefault();
+    logoutUser();
+  });
+}
+
+// login hone ke baad logout button dikhao
+function updateUIOnLogin(user) {
+  const sidebarName = document.querySelector(".user-name");
+  const sidebarRole = document.querySelector(".user-role");
+  const avatarTop   = document.getElementById("btnAvatarTop");
+  const authBtnTop  = document.getElementById("btnAuthTop");
+
+  const displayName = user.name || user.email || "User";
+  const firstLetter = displayName.charAt(0).toUpperCase();
+
+  if (sidebarName) sidebarName.textContent = displayName;
+  if (sidebarRole) sidebarRole.textContent = "Logged in";
+
+  if (avatarTop) avatarTop.textContent = firstLetter;
+
+  if (authBtnTop) {
+    authBtnTop.textContent = "Profile";
+    authBtnTop.classList.add("top-btn-loggedin");
+  }
+
+  if (btnLogout) {
+    btnLogout.style.display = "inline-flex";
+  }
+}
+
+// logout button click
+if (btnLogout) {
+  btnLogout.addEventListener("click", (e) => {
+    e.preventDefault();
+    logoutUser();
+  });
+}
+
+// page load par agar user hai to logout button bhi dikhao
+document.addEventListener("DOMContentLoaded", () => {
+  const existing = getCurrentUser();
+  if (existing) {
+    updateUIOnLogin(existing);
+  } else if (btnLogout) {
+    btnLogout.style.display = "none";
+  }
+});
+
