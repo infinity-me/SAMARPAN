@@ -107,3 +107,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server Live → http://localhost:${PORT}`);
 });
+const aiQuizRoutes = require("./routes/aiQuiz");
+app.use("/api/ai", aiQuizRoutes);
