@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { generateQuizQuestions } = require("../services/gptService");
 const Quiz = require("../models/Quiz");
+const User = require("../models/User"); // ✅ IMPORTANT
 
 // ✅ Generate AI Quiz (Schema Compatible)
 router.post("/generate-quiz", async (req, res) => {
@@ -11,6 +12,23 @@ router.post("/generate-quiz", async (req, res) => {
 
     if (!title || !topic || !difficulty) {
       return res.status(400).json({ error: "title, topic & difficulty required" });
+    }
+
+    // ✅ Convert Email OR ID → ObjectId
+    let authorId = null;
+
+    if (userId) {
+      if (userId.includes("@")) {
+        // CASE 1: Email sent
+        const user = await User.findOne({ email: userId });
+        if (!user) {
+          return res.status(400).json({ error: "User not found" });
+        }
+        authorId = user._id;
+      } else {
+        // CASE 2: MongoDB ID sent
+        authorId = userId;
+      }
     }
 
     const questions = await generateQuizQuestions(
@@ -22,7 +40,7 @@ router.post("/generate-quiz", async (req, res) => {
     const quiz = await Quiz.create({
       title,
       topic,
-      author: userId || null,
+      author: authorId, // ✅ ALWAYS correct type now
       questions,
       aiGenerated: true,
       tags: tags || [],

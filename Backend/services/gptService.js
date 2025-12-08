@@ -1,7 +1,7 @@
-const OpenAI = require("openai");
+const Groq = require("groq-sdk");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 async function generateQuizQuestions(topic, difficulty, count = 5) {
@@ -22,14 +22,15 @@ Return ONLY valid JSON in this exact format:
 ]
 `;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+  const response = await groq.chat.completions.create({
+    model: "llama-3.1-8b-instant", // ✅ UPDATED WORKING MODEL
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
   });
 
-  const text = response.choices[0].message.content;
-  return JSON.parse(text);
+  const rawText = response.choices[0].message.content.trim();
+
+  return JSON.parse(rawText);
 }
 
 module.exports = { generateQuizQuestions };
