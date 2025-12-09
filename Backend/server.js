@@ -232,6 +232,10 @@ passport.use(
   )
 );
 
+console.log("Google callback:", process.env.GOOGLE_CALLBACK_URL);
+console.log("Facebook callback:", process.env.FACEBOOK_CALLBACK_URL);
+
+
 
 // ========== SOCIAL LOGIN COMMON REDIRECT HELPER ==========
 function sendSocialLoginRedirect(req, res) {
@@ -268,14 +272,13 @@ app.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: FRONTEND_URL,
-  }),
-  sendSocialLoginRedirect
-);
+app.get("/auth/google/callback",
+  passport.authenticate("google", { session:false, failureRedirect: process.env.FRONTEND_URL }),
+  (req,res) => {
+     console.log("callback req.query:", req.query);
+     sendSocialLoginRedirect(req,res);
+  });
+
 
 // FACEBOOK
 app.get(

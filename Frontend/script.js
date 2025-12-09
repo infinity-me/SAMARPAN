@@ -23,18 +23,16 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 // SOCIAL LOGIN RETURN HANDLER
 const urlParams = new URLSearchParams(window.location.search);
-const token  = urlParams.get("token");
-const name   = urlParams.get("name");
-const email  = urlParams.get("email");
+const token = urlParams.get("token");
+const name  = urlParams.get("name");
+const email = urlParams.get("email");
 
 if (token && email) {
-    // backend se aaya JWT token + user info localStorage me save karo
-    localStorage.setItem("samarpanUser", JSON.stringify({ token, name, email }));
-    // UI ko logged-in state me le jao
-    updateUIOnLogin({ name, email });
-    // URL se ?token=... etc hata do
-    history.replaceState(null, "", window.location.pathname);
+  localStorage.setItem("samarpanUser", JSON.stringify({ token, name, email }));
+  updateUIOnLogin({ name, email });
+  history.replaceState(null, "", window.location.pathname);
 }
+
 
 
 
