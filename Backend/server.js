@@ -1,6 +1,12 @@
 // Backend/server.js
 require("dotenv").config();
 
+console.log("ENV CHECK → FRONTEND_URL:", process.env.FRONTEND_URL);
+console.log("ENV CHECK → GOOGLE_CALLBACK_URL:", process.env.GOOGLE_CALLBACK_URL);
+console.log("ENV CHECK → FACEBOOK_CALLBACK_URL:", process.env.FACEBOOK_CALLBACK_URL);
+console.log("ENV CHECK → GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? 'OK' : 'MISSING');
+console.log("ENV CHECK → FACEBOOK_CLIENT_ID:", process.env.FACEBOOK_CLIENT_ID ? 'OK' : 'MISSING');
+
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -231,9 +237,6 @@ passport.use(
     }
   )
 );
-
-console.log("Google callback:", process.env.GOOGLE_CALLBACK_URL);
-console.log("Facebook callback:", process.env.FACEBOOK_CALLBACK_URL);
 
 
 
