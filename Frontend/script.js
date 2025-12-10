@@ -408,6 +408,10 @@ function showStatusText(el, text, color) {
       updateUIOnLogin(data);
       hideAuthView();   // agar view-auth page hai to usko bhi hide kar do
 
+      if (document.getElementById("view-dashboard")) {
+        showView("dashboard");
+      } 
+      
       setTimeout(() => {
         closeAuthModal();
       }, 700);
