@@ -46,6 +46,11 @@
           <span>Explore</span>
           <div class="shockwave"></div>
         </button>
+                <button class="side-link" data-view="battles">
+          <span>Battles</span>
+          <div class="shockwave"></div>
+        </button>
+
       </nav>
     </aside>
 
@@ -273,7 +278,6 @@
               <li>Edit AI questions before saving</li>
             </ul>
 
-            <!-- yahan baad me tumhara AI form aa sakta hai -->
             <div class="field">
               <label for="aiTopic">Topic</label>
               <input type="text" id="aiTopic" placeholder="Eg. DBMS Normalization" />
@@ -296,10 +300,23 @@
                 <input type="number" id="aiCount" value="5" min="1" max="50" />
               </div>
             </div>
-            <button class="btn btn-outline" id="aiGenerateBtn" type="button">
-              Create using AI
-            </button>
-            <p id="aiStatus" class="form-note"></p>
+            <div class="ai-actions">
+  <button class="btn btn-outline" id="aiGenerateBtn">
+    Create using AI
+  </button>
+
+  <!-- Naya play button – by default hidden -->
+  <button
+    class="btn btn-outline"
+    id="aiPlayBtn"
+    style="display:none;"
+  >
+    Play this quiz
+  </button>
+</div>
+
+<p id="aiStatus" class="form-note"></p>
+
           </div>
         </div>
 
@@ -418,6 +435,42 @@
   <p id="manualEditorStatus" style="margin-top:.7rem; font-size:0.8rem;"></p>
 </div>
 
+
+      <!-- ========== QUIZ PLAYER VIEW (simple) ========== -->
+      <section class="view" id="view-player">
+        <div class="view-header">
+          <h2 id="playerTitle">Quiz player</h2>
+          <p id="playerSubtitle">Answer the questions and see your score.</p>
+        </div>
+
+        <div class="card" id="playerCard">
+          <div class="player-meta">
+            <span id="playerProgress">Question 1 / 1</span>
+            <span id="playerTimer"></span>
+          </div>
+
+          <h3 id="playerQuestionText">Question will appear here</h3>
+
+          <div id="playerOptions" class="player-options">
+            <!-- options as buttons -->
+          </div>
+
+          <p id="playerStatus" class="player-status"></p>
+
+          <button class="btn btn-primary" id="playerNextBtn" type="button">
+            Next question
+          </button>
+        </div>
+
+        <div class="card" id="playerResult" style="display:none; margin-top:1rem;">
+          <h3>Quiz finished</h3>
+          <p id="playerScoreLine"></p>
+          <p id="playerTimeLine"></p>
+          <button class="btn btn-outline" id="playerBackDashboard" type="button">
+            Back to dashboard
+          </button>
+        </div>
+      </section>
 
       <!-- LEADERBOARD VIEW -->
       <section class="view" id="view-leaderboard">
@@ -552,10 +605,11 @@
         <div class="profile-grid">
           <div class="card profile-main">
             <div class="profile-header">
-              <div class="profile-avatar">A</div>
+              <div class="profile-avatar" id="profileAvatar">U</div>
               <div>
-                <h3>Aman Maurya</h3>
-                <p class="profile-sub">Host • Team Samarpan</p>
+                <h3 id="profileName">User</h3>
+                <p class="profile-sub" id="profileRole">Host • Team Samarpan</p>
+
               </div>
             </div>
 
@@ -706,6 +760,95 @@
           </div>
         </div>
       </section>
+
+            <!-- BATTLES VIEW -->
+      <section class="view" id="view-battles">
+        <div class="view-header">
+          <h2>Team battles (2v2 &amp; 4v4)</h2>
+          <p>Host or join squad battles using a quiz PIN.</p>
+        </div>
+
+        <div class="host-grid">
+          <!-- LEFT: CREATE BATTLE -->
+          <div class="card host-form">
+            <h3>Create battle</h3>
+
+            <div class="field">
+              <label for="battle-quiz">Select quiz</label>
+              <select id="battle-quiz">
+                <option value="">Choose a quiz</option>
+                <option value="manual-last">My last manual quiz</option>
+                <option value="ai-last">My last AI quiz</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="battle-type">Battle type</label>
+              <select id="battle-type">
+                <option value="2v2">2 vs 2</option>
+                <option value="4v4">4 vs 4</option>
+              </select>
+            </div>
+
+            <div class="field inline-field">
+              <div>
+                <label for="battle-timer">Timer per question</label>
+                <input type="number" id="battle-timer" value="30" />
+              </div>
+              <div>
+                <label for="battle-rated">Rated battle</label>
+                <select id="battle-rated">
+                  <option value="rated">Yes, update ratings</option>
+                  <option value="casual">No, friendly only</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-primary full-width" id="btnBattleHost">
+              Generate battle PIN
+            </button>
+
+            <button class="btn btn-outline full-width" id="btnBattlePlayLocal" style="margin-top:0.5rem;">
+              Start local battle on this device
+            </button>
+
+            <p id="battleStatus" class="form-note"></p>
+          </div>
+
+          <!-- RIGHT: JOIN BATTLE -->
+          <div class="card host-side">
+            <h3>Join a battle (prototype)</h3>
+
+            <div class="field">
+              <label for="battleJoinPin">Battle PIN from friend</label>
+              <input
+                type="text"
+                id="battleJoinPin"
+                placeholder="Enter PIN here"
+              />
+            </div>
+
+            <div class="field">
+              <label for="battleJoinName">Your name / team</label>
+              <input
+                type="text"
+                id="battleJoinName"
+                placeholder="Eg. Aman, Team Alpha"
+              />
+            </div>
+
+            <button class="btn btn-outline full-width" id="btnBattleJoin">
+              Join battle
+            </button>
+
+            <p class="form-note">
+              For this prototype, joining just shows a confirmation popup.
+              Realtime multi-player (Socket.io) will come in full version.
+            </p>
+          </div>
+        </div>
+      </section>
+
 
       <!-- AUTH VIEW (PAGE) -->
       <section class="view" id="view-auth">

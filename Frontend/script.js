@@ -98,6 +98,7 @@
   function updateUIOnLogin(user) {
     const sidebarName = document.querySelector(".user-name");
     const sidebarRole = document.querySelector(".user-role");
+    const sidebarAvatar = document.querySelector(".user-avatar");
     const avatarTop = document.getElementById("btnAvatarTop");
     const authBtnTop = document.getElementById("btnAuthTop");
     const btnLogout = document.getElementById("btnLogout");
@@ -129,6 +130,46 @@
     if (btnLogout) {
       btnLogout.style.display = user ? "inline-flex" : "none";
     }
+      // ===== PROFILE VIEW DATA =====
+  const profileName = document.getElementById("profileName");
+  const profileRole = document.getElementById("profileRole");
+  const profileAvatar = document.getElementById("profileAvatar");
+
+  if (profileName) {
+    profileName.textContent = user?.name || user?.email || "User";
+  }
+
+  if (profileRole) {
+    profileRole.textContent = "Host • Team Samarpan";
+  }
+
+  if (profileAvatar) {
+    if (user?.avatar) {
+      profileAvatar.innerHTML = `<img src="${user.avatar}" class="profile-img" />`;
+    } else {
+      profileAvatar.textContent =
+        (user?.name || user?.email || "U").charAt(0).toUpperCase();
+    }
+  }
+
+  if (sidebarAvatar) {
+    sidebarAvatar.innerHTML = "";
+
+    if (user && user.avatar) {
+      const img = document.createElement("img");
+      img.src = user.avatar;
+      img.alt = "avatar";
+      img.className = "profile-img";
+      sidebarAvatar.appendChild(img);
+    } else {
+      const letter = (user?.name || user?.email || "U")
+        .charAt(0)
+        .toUpperCase();
+      sidebarAvatar.textContent = letter;
+    }
+  }
+
+
   }
 
   // ---------------- Social token handling (SSO) ----------------
@@ -155,48 +196,287 @@
     }
   }
 
-  // ---------------- Render last AI-generated quiz ----------------
-  function renderLastAIQuizToDashboard() {
-    try {
-      const raw = localStorage.getItem("samarpanLastAIQuiz");
-      if (!raw) return;
-      const quiz = safeParse(raw, null);
-      if (!quiz) return;
+    // ====== SIMPLE QUIZ PLAYER STATE ======
+  let playerQuiz = null;
+  let playerIndex = 0;
+  let playerCorrect = 0;
+  let playerStartTime = 0;
+  let playerQuestionStart = 0;
 
-      const quizGrid =
-        document.querySelector(".quiz-grid") ||
-        document.getElementById("quizGrid");
-      if (!quizGrid) return;
-
-      const card = document.createElement("div");
-      card.className = "quiz-card";
-      const qcount = (quiz.questions && quiz.questions.length) || 0;
-      card.innerHTML = `
-        <h4>${quiz.title || "AI Quiz"}</h4>
-        <p>${qcount} questions • AI-generated</p>
-        <div class="quiz-meta">
-          <small>AI • just now</small>
-          <div style="margin-top:6px">
-            <button class="mini-btn view-quiz">Play</button>
-            <button class="mini-btn edit-quiz">Edit</button>
-          </div>
-        </div>
-      `;
-
-      card.querySelector(".view-quiz")?.addEventListener("click", () => {
-        localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
-        if (document.getElementById("view-player")) showView("player");
-      });
-      card.querySelector(".edit-quiz")?.addEventListener("click", () => {
-        localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
-        if (document.getElementById("view-create")) showView("create");
-      });
-
-      quizGrid.prepend(card);
-    } catch (e) {
-      console.warn("renderLastAIQuizToDashboard error:", e);
-    }
+  function getPlayerEls() {
+    return {
+      title: document.getElementById("playerTitle"),
+      subtitle: document.getElementById("playerSubtitle"),
+      progress: document.getElementById("playerProgress"),
+      timer: document.getElementById("playerTimer"),
+      qText: document.getElementById("playerQuestionText"),
+      options: document.getElementById("playerOptions"),
+      status: document.getElementById("playerStatus"),
+      nextBtn: document.getElementById("playerNextBtn"),
+      resultCard: document.getElementById("playerResult"),
+      scoreLine: document.getElementById("playerScoreLine"),
+      timeLine: document.getElementById("playerTimeLine"),
+      backBtn: document.getElementById("playerBackDashboard"),
+      mainCard: document.getElementById("playerCard"),
+    };
   }
+
+  function startQuizPlayer(quiz) {
+    const els = getPlayerEls();
+    if (!els.qText) return; // view-player DOM me nahi hai
+
+    if (!quiz || !quiz.questions || !quiz.questions.length) {
+      els.qText.textContent = "Quiz data missing.";
+      return;
+    }
+
+    playerQuiz = quiz;
+    playerIndex = 0;
+    playerCorrect = 0;
+    playerStartTime = Date.now();
+    playerQuestionStart = Date.now();
+
+    if (els.title) els.title.textContent = quiz.title || "Quiz player";
+    if (els.subtitle) {
+      els.subtitle.textContent = quiz.topic
+        ? `Topic: ${quiz.topic}`
+        : "Answer the questions.";
+    }
+
+    if (els.resultCard) els.resultCard.style.display = "none";
+    if (els.mainCard) els.mainCard.style.display = "block";
+
+    renderPlayerQuestion();
+    showView("player");
+  }
+
+  function renderPlayerQuestion() {
+    const els = getPlayerEls();
+    if (!playerQuiz || !playerQuiz.questions) return;
+
+    const q = playerQuiz.questions[playerIndex];
+    if (!q) return;
+
+    if (els.progress) {
+      els.progress.textContent = `Question ${playerIndex + 1} / ${playerQuiz.questions.length}`;
+    }
+    if (els.qText) els.qText.textContent = q.question || "";
+
+    if (els.options) {
+      els.options.innerHTML = "";
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-outline player-option-btn";
+        btn.textContent = opt;
+        btn.addEventListener("click", () => handlePlayerAnswer(idx));
+        els.options.appendChild(btn);
+      });
+    }
+
+    if (els.status) els.status.textContent = "";
+
+    if (els.nextBtn) {
+      els.nextBtn.disabled = true;
+      els.nextBtn.textContent =
+        playerIndex === playerQuiz.questions.length - 1
+          ? "Finish quiz"
+          : "Next question";
+    }
+
+    playerQuestionStart = Date.now();
+  }
+
+  function handlePlayerAnswer(idx) {
+    const els = getPlayerEls();
+    const q = playerQuiz?.questions?.[playerIndex];
+    if (!q) return;
+
+    const buttons = els.options?.querySelectorAll("button");
+    buttons?.forEach((b, i) => {
+      b.disabled = true;
+      if (i === q.correctIndex) {
+        b.classList.add("btn-correct");
+      }
+      if (i === idx && i !== q.correctIndex) {
+        b.classList.add("btn-wrong");
+      }
+    });
+
+    const timeForThis = (Date.now() - playerQuestionStart) / 1000;
+    q._timeTakenSec = timeForThis;
+
+    if (idx === q.correctIndex) {
+      playerCorrect++;
+      if (els.status) els.status.textContent = "Correct!";
+    } else {
+      if (els.status) {
+        els.status.textContent =
+          "Incorrect. Correct option: " + (q.options[q.correctIndex] || "");
+      }
+    }
+
+    if (els.nextBtn) els.nextBtn.disabled = false;
+  }
+
+  function finishPlayerQuiz() {
+    const els = getPlayerEls();
+    if (!playerQuiz || !playerQuiz.questions) return;
+
+    const totalQ = playerQuiz.questions.length;
+    const totalTimeSec = (Date.now() - playerStartTime) / 1000;
+    const avgTime = totalTimeSec / totalQ;
+
+    if (els.scoreLine) {
+      const percent = Math.round((playerCorrect / totalQ) * 100);
+      els.scoreLine.textContent = `You scored ${playerCorrect} / ${totalQ} (${percent}%).`;
+    }
+    if (els.timeLine) {
+      els.timeLine.textContent = `Total time ${totalTimeSec.toFixed(
+        1
+      )}s • Avg per question ${avgTime.toFixed(1)}s.`;
+    }
+
+    if (els.mainCard) els.mainCard.style.display = "block";
+    if (els.resultCard) els.resultCard.style.display = "block";
+    if (els.mainCard) els.mainCard.style.display = "none";
+  }
+
+
+function renderLastAIQuizToDashboard() {
+  try {
+    const quizGrid =
+      document.querySelector(".quiz-grid") ||
+      document.getElementById("quizGrid");
+    if (!quizGrid) return;
+
+    const user = getCurrentUser && getCurrentUser();
+    const keyPart =
+      (user && (user.userId || user._id || user.email)) || "guest";
+    const storageKey = `samarpanLastAIQuiz_${keyPart}`;
+
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return;
+
+    const quiz = safeParse(raw, null);
+    if (!quiz) return;
+
+    // Purana AI card hata do (agar hai)
+    const old = quizGrid.querySelector('[data-local-ai-card="1"]');
+    if (old) old.remove();
+
+    const card = document.createElement("div");
+    card.className = "quiz-card";
+    card.setAttribute("data-local-ai-card", "1");
+
+    const qcount = (quiz.questions && quiz.questions.length) || 0;
+    card.innerHTML = `
+      <h4>${quiz.title || "AI Quiz"}</h4>
+      <p>${qcount} questions • AI-generated</p>
+      <div class="quiz-meta">
+        <small>AI • just now</small>
+        <div style="margin-top:6px">
+          <button class="mini-btn ai-play">Play</button>
+          <button class="mini-btn ai-edit">Edit</button>
+        </div>
+      </div>
+    `;
+
+    // 👉 Play: quiz player use karo
+    card.querySelector(".ai-play").addEventListener("click", () => {
+      localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+      startQuizPlayer(quiz);
+    });
+
+    // 👉 Edit: create view open
+    card.querySelector(".ai-edit").addEventListener("click", () => {
+      localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+      showView("create");
+      // future: manual editor pre-fill kar sakte ho
+    });
+
+    quizGrid.prepend(card);
+  } catch (e) {
+    console.warn("renderLastAIQuizToDashboard error:", e);
+  }
+}
+
+function renderLastManualQuizToDashboard() {
+  try {
+    const quizGrid =
+      document.querySelector(".quiz-grid") ||
+      document.getElementById("quizGrid");
+    if (!quizGrid) return;
+
+    // Current user ke hisaab se key
+    const user = getCurrentUser && getCurrentUser();
+    const keyPart =
+      (user && (user.userId || user._id || user.email)) || "guest";
+    const storageKey = `samarpanLastManualQuiz_${keyPart}`;
+
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return;
+
+    const quiz = safeParse(raw, null);
+    if (!quiz) return;
+
+    // Purana manual card delete karo
+    const old = quizGrid.querySelector('[data-local-manual-card="1"]');
+    if (old) old.remove();
+
+    const card = document.createElement("div");
+    card.className = "quiz-card";
+    card.setAttribute("data-local-manual-card", "1");
+
+    const qcount = (quiz.questions && quiz.questions.length) || 0;
+    card.innerHTML = `
+      <h4>${quiz.title || "My manual quiz"}</h4>
+      <p>${qcount} questions • Manual</p>
+      <div class="quiz-meta">
+        <small>Created by you</small>
+        <div style="margin-top:6px">
+          <button class="mini-btn manual-play">Play</button>
+          <button class="mini-btn manual-host">Host</button>
+        </div>
+      </div>
+    `;
+
+    // 👉 Play: simple quiz player
+    card.querySelector(".manual-play").addEventListener("click", () => {
+      localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+      startQuizPlayer(quiz);
+    });
+
+    // 👉 Host: host view open + dropdown select
+    card.querySelector(".manual-host").addEventListener("click", () => {
+      const hostSelect = document.getElementById("host-quiz");
+      if (hostSelect) {
+        // ensure option exists
+        let opt = Array.from(hostSelect.options).find(
+          (o) => o.value === "manual-last"
+        );
+        if (!opt) {
+          opt = document.createElement("option");
+          opt.value = "manual-last";
+          opt.textContent = quiz.title || "My last manual quiz";
+          hostSelect.appendChild(opt);
+        }
+        hostSelect.value = "manual-last";
+      }
+      showView("host");
+      const hostForm = document.querySelector(".host-form");
+      if (hostForm) {
+        hostForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    quizGrid.prepend(card);
+  } catch (e) {
+    console.warn("renderLastManualQuizToDashboard error:", e);
+  }
+}
+
+
 
   function hideAuthView() {
     const authView = document.getElementById("view-auth");
@@ -447,81 +727,107 @@
       }
     })();
 
-    // AI generate
-    (function () {
-      const aiGenerateBtn = document.getElementById("aiGenerateBtn");
-      const aiStatus = document.getElementById("aiStatus");
-      if (!aiGenerateBtn) return;
+// ================= AI generate =================
+(function () {
+  const aiGenerateBtn = document.getElementById("aiGenerateBtn");
+  const aiStatus      = document.getElementById("aiStatus");
+  const aiPlayBtn     = document.getElementById("aiPlayBtn");
+  if (!aiGenerateBtn) return;
 
-      aiGenerateBtn.addEventListener("click", async () => {
-        if (!requireLogin("Please log in to generate AI quizzes.")) return;
 
-        const currentUser = getCurrentUser();
-        const titleRaw = document.getElementById("aiTitle")?.value.trim();
-        const topic = document.getElementById("aiTopic")?.value.trim();
-        const difficulty =
-          document.getElementById("aiDifficulty")?.value || "medium";
-        const questionCount =
-          Number(document.getElementById("aiCount")?.value) || 5;
-        const title = titleRaw || "AI Quiz";
+  aiGenerateBtn.addEventListener("click", async () => {
+    if (!requireLogin("Please log in to generate AI quizzes.")) return;
 
-        if (!topic) {
-          showStatusText(
-            aiStatus,
-            "Please enter a topic for the quiz.",
-            "#b91c1c"
-          );
-          return;
-        }
-        showStatusText(aiStatus, "Generating AI quiz...", "#4b5563");
+    const currentUser = getCurrentUser();
+    const titleRaw    = document.getElementById("aiTitle")?.value.trim();
+    const topic       = document.getElementById("aiTopic")?.value.trim();
+    const difficulty  =
+      document.getElementById("aiDifficulty")?.value || "medium";
+    const questionCount =
+      Number(document.getElementById("aiCount")?.value) || 5;
+    const title = titleRaw || "AI Quiz";
 
-        try {
-          const res = await fetch(`${API_BASE}/api/ai/generate-quiz`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title,
-              topic,
-              difficulty,
-              count: questionCount,
-              userId:
-                currentUser?.userId ||
-                currentUser?._id ||
-                currentUser?.email,
-              tags: [topic.toLowerCase()],
-            }),
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            showStatusText(
-              aiStatus,
-              data.error || "AI quiz generation failed.",
-              "#b91c1c"
-            );
-            return;
-          }
-          if (data.quiz) {
-            localStorage.setItem(
-              "samarpanLastAIQuiz",
-              JSON.stringify(data.quiz)
-            );
-          }
-          showStatusText(
-            aiStatus,
-            "AI quiz generated successfully!",
-            "#16a34a"
-          );
-          renderLastAIQuizToDashboard();
-        } catch (err) {
-          console.error("AI Quiz Error:", err);
-          showStatusText(
-            aiStatus,
-            "Network error while generating quiz.",
-            "#b91c1c"
-          );
-        }
+    if (!topic) {
+      showStatusText(aiStatus, "Please enter a topic for the quiz.", "#b91c1c");
+      return;
+    }
+    showStatusText(aiStatus, "Generating AI quiz...", "#4b5563");
+
+    try {
+      const res = await fetch(`${API_BASE}/api/ai/generate-quiz`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          topic,
+          difficulty,
+          count: questionCount,
+          userId:
+            currentUser?.userId || currentUser?._id || currentUser?.email,
+          tags: [topic.toLowerCase()],
+        }),
       });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showStatusText(aiStatus, data.error || "AI quiz generation failed.", "#b91c1c");
+        return;
+      }
+
+      // 🔐 user-specific key
+      if (data.quiz) {
+        const u      = getCurrentUser && getCurrentUser();
+        const keyPart =
+          (u && (u.userId || u._id || u.email)) || "guest";
+        const storageKey = `samarpanLastAIQuiz_${keyPart}`;
+
+        localStorage.setItem(storageKey, JSON.stringify(data.quiz));
+      }
+
+      showStatusText(aiStatus, "AI quiz generated successfully!", "#16a34a");
+      renderLastAIQuizToDashboard();
+
+      if (aiPlayBtn && data.quiz) {
+        aiPlayBtn.style.display = "inline-flex";
+        aiPlayBtn.onclick = () => {
+
+          startQuizPlayer(data.quiz);
+        };
+      }
+
+    } catch (err) {
+      console.error("AI Quiz Error:", err);
+      showStatusText(aiStatus, "Network error while generating quiz.", "#b91c1c");
+    }
+  });
+})();
+
+    // ===== Quiz player buttons =====
+    (function () {
+      const nextBtn = document.getElementById("playerNextBtn");
+      const backBtn = document.getElementById("playerBackDashboard");
+
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          if (!playerQuiz || !playerQuiz.questions) return;
+
+          if (playerIndex < playerQuiz.questions.length - 1) {
+            playerIndex++;
+            renderPlayerQuestion();
+          } else {
+            finishPlayerQuiz();
+          }
+        });
+      }
+
+      if (backBtn) {
+        backBtn.addEventListener("click", () => {
+          showView("dashboard");
+        });
+      }
     })();
+
+
 
     // ================== MANUAL QUIZ EDITOR LOGIC ==================
     (function () {
@@ -725,6 +1031,9 @@
           } catch (e) {
             console.warn("Could not store last manual quiz:", e);
           }
+          // Dashboard par manual quiz card refresh karo
+          renderLastManualQuizToDashboard();
+
 
           // Reset state
           manualQuestions = [];
@@ -901,6 +1210,93 @@
       }
     })();
 
+        // ================= DASHBOARD TOOLBAR + "HOST AGAIN" BUTTONS =================
+    (function () {
+      const toolCreateManual      = document.getElementById("toolCreateManual");
+      const toolCreateAI          = document.getElementById("toolCreateAI");
+      const toolLiveTournaments   = document.getElementById("toolLiveTournaments");
+      const hostSelect            = document.getElementById("host-quiz");
+
+      // ---- Toolbar: Create quiz (manual) ----
+      if (toolCreateManual) {
+        toolCreateManual.addEventListener("click", () => {
+          if (!requireLogin("Please log in to create a quiz.")) return;
+
+          // Create view khol do
+          showView("create");
+
+          // Manual editor kholne ke liye button ko hi click karwa dete hain
+          const btnOpenEditor = document.getElementById("btnOpenManualEditor");
+          if (btnOpenEditor) {
+            btnOpenEditor.click();
+          }
+        });
+      }
+
+      // ---- Toolbar: Create quiz (AI) ----
+      if (toolCreateAI) {
+        toolCreateAI.addEventListener("click", () => {
+          if (!requireLogin("Please log in to use AI quizzes.")) return;
+
+          showView("create");
+
+          // AI wala card tak smooth scroll (2nd create-card approx AI card hai)
+          const aiCard = document.querySelector("#view-create .create-card:nth-of-type(2)");
+          if (aiCard) {
+            aiCard.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      }
+
+      // ---- Toolbar: Live tournaments -> abhi ke liye Host view khol do ----
+      if (toolLiveTournaments) {
+        toolLiveTournaments.addEventListener("click", () => {
+          if (!requireLogin("Please log in to host tournaments.")) return;
+          showView("host");
+
+          const hostForm = document.querySelector(".host-form");
+          if (hostForm) {
+            hostForm.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      }
+
+      // ---- Dashboard "Host again" buttons ----
+      // sirf un mini-btns ko pakdo jinke text me "host again" likha hai
+      const hostAgainButtons = Array.from(
+        document.querySelectorAll(".quiz-card .mini-btn")
+      ).filter((btn) =>
+        (btn.textContent || "").toLowerCase().includes("host again")
+      );
+
+      hostAgainButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (!requireLogin("Please log in to host a quiz.")) return;
+
+          const card  = btn.closest(".quiz-card");
+          const title = card?.querySelector("h4")?.textContent?.trim();
+
+          // host dropdown me matching option select karne ki koshish
+          if (hostSelect && title) {
+            const match = Array.from(hostSelect.options).find(
+              (opt) => opt.textContent.trim() === title
+            );
+            if (match) {
+              hostSelect.value = match.value;
+            }
+          }
+
+          // Host view dikhao
+          showView("host");
+
+          const hostForm = document.querySelector(".host-form");
+          if (hostForm) {
+            hostForm.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      });
+    })();
+
     // Protect important feature buttons
     (function () {
       const protectedActions = [
@@ -1006,7 +1402,210 @@
       });
     })();
 
-    
+        // ================= BATTLES VIEW (2v2 / 4v4) =================
+    (function () {
+      const selectBattleQuiz = document.getElementById("battle-quiz");
+      const statusEl         = document.getElementById("battleStatus");
+      const btnHost          = document.getElementById("btnBattleHost");
+      const btnLocal         = document.getElementById("btnBattlePlayLocal");
+      const btnJoin          = document.getElementById("btnBattleJoin");
+
+      function setBattleStatus(msg, color = "#e5e7eb") {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.style.color = color;
+      }
+
+      // --- Dropdown labels set karo (per-user last manual / AI quiz) ---
+      if (selectBattleQuiz) {
+        const user = getCurrentUser && getCurrentUser();
+        const userKeyPart =
+          (user && (user.userId || user._id || user.email)) || "guest";
+
+        // Manual last
+        const optManual = selectBattleQuiz.querySelector(
+          'option[value="manual-last"]'
+        );
+        if (optManual) {
+          const key = `samarpanLastManualQuiz_${userKeyPart}`;
+          const raw = localStorage.getItem(key);
+          const quiz = raw && safeParse(raw, null);
+          if (quiz && quiz.title) {
+            optManual.textContent = `${quiz.title} (manual)`;
+          } else {
+            optManual.disabled = true;
+          }
+        }
+
+        // AI last
+        const optAI = selectBattleQuiz.querySelector(
+          'option[value="ai-last"]'
+        );
+        if (optAI) {
+          const key = `samarpanLastAIQuiz_${userKeyPart}`;
+          const raw = localStorage.getItem(key);
+          const quiz = raw && safeParse(raw, null);
+          if (quiz && quiz.title) {
+            optAI.textContent = `${quiz.title} (AI)`;
+          } else {
+            optAI.disabled = true;
+          }
+        }
+      }
+
+      // --- Host battle -> backend ko /api/host/start call (prototype meta ke saath) ---
+      if (btnHost) {
+        btnHost.addEventListener("click", async () => {
+          if (!requireLogin("Please log in to host a battle.")) return;
+
+          const user = getCurrentUser();
+          if (!user) return;
+
+          const selectQuiz = document.getElementById("battle-quiz");
+          const battleType = document.getElementById("battle-type")?.value || "2v2";
+          const timerSeconds =
+            Number(document.getElementById("battle-timer")?.value) || 30;
+          const rated =
+            (document.getElementById("battle-rated")?.value || "rated") ===
+            "rated";
+
+          if (!selectQuiz || !selectQuiz.value) {
+            setBattleStatus("Choose which quiz to use for the battle.", "#b91c1c");
+            return;
+          }
+
+          const userKeyPart =
+            user.userId || user._id || user.email || "guest";
+
+          let quiz = null;
+          if (selectQuiz.value === "manual-last") {
+            const key = `samarpanLastManualQuiz_${userKeyPart}`;
+            const raw = localStorage.getItem(key);
+            quiz = raw && safeParse(raw, null);
+          } else if (selectQuiz.value === "ai-last") {
+            const key = `samarpanLastAIQuiz_${userKeyPart}`;
+            const raw = localStorage.getItem(key);
+            quiz = raw && safeParse(raw, null);
+          }
+
+          const quizId = quiz && (quiz._id || quiz.quizId);
+          if (!quizId) {
+            setBattleStatus(
+              "Could not find quiz data for this option.",
+              "#b91c1c"
+            );
+            return;
+          }
+
+          setBattleStatus("Creating battle session...", "#4b5563");
+
+          try {
+            const res = await fetch(`${API_BASE}/api/host/start`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                quizId,
+                hostEmail: user.email,
+                mode: "battle",          // ⬅ backend agar ignore kare to bhi safe
+                battleType,              // extra meta, future use
+                timerSeconds,
+                rated,
+              }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+              console.error("Battle host error:", data);
+              setBattleStatus(
+                data.error || "Failed to create battle.",
+                "#b91c1c"
+              );
+              return;
+            }
+
+            setBattleStatus(
+              `Battle created! Share PIN: ${data.pin}`,
+              "#16a34a"
+            );
+            alert(
+              `Battle created!\n\nPIN: ${data.pin}\nType: ${battleType.toUpperCase()}\n\n(Prototype – friends will join manually using this PIN.)`
+            );
+          } catch (err) {
+            console.error("Battle host network err:", err);
+            setBattleStatus(
+              "Network error while creating battle.",
+              "#b91c1c"
+            );
+          }
+        });
+      }
+
+      // --- Local battle (same device) -> quiz-player open karo ---
+      if (btnLocal) {
+        btnLocal.addEventListener("click", () => {
+          if (!requireLogin("Please log in to play.")) return;
+
+          const user = getCurrentUser();
+          if (!user) return;
+
+          const selectQuiz = document.getElementById("battle-quiz");
+          if (!selectQuiz || !selectQuiz.value) {
+            alert("Please choose which quiz to use for the battle first.");
+            return;
+          }
+
+          const userKeyPart =
+            user.userId || user._id || user.email || "guest";
+          let key = null;
+
+          if (selectQuiz.value === "manual-last") {
+            key = `samarpanLastManualQuiz_${userKeyPart}`;
+          } else if (selectQuiz.value === "ai-last") {
+            key = `samarpanLastAIQuiz_${userKeyPart}`;
+          } else {
+            alert(
+              "For this prototype, only your last manual / AI quiz is supported."
+            );
+            return;
+          }
+
+          const raw = localStorage.getItem(key);
+          const quiz = raw && safeParse(raw, null);
+          if (!quiz || !quiz.questions || !quiz.questions.length) {
+            alert("Could not load quiz questions from storage.");
+            return;
+          }
+
+          // Same quiz-player jo hum already use kar rahe hain
+          startQuizPlayer(quiz);
+        });
+      }
+
+      // --- Join battle (prototype alert only) ---
+      if (btnJoin) {
+        btnJoin.addEventListener("click", () => {
+          const pin =
+            document.getElementById("battleJoinPin")?.value.trim() || "";
+          const name =
+            document.getElementById("battleJoinName")?.value.trim() || "";
+
+          if (!pin) {
+            alert("Enter the battle PIN shared by your friend.");
+            return;
+          }
+          if (!name) {
+            alert("Enter your name or team name.");
+            return;
+          }
+
+          alert(
+            `Prototype:\nJoining battle PIN ${pin} as "${name}".\n\nFull version me yahan se live team battle UI open hoga (Socket.io).`
+          );
+        });
+      }
+    })();
+
+
     // Data-copy convenience
     (function () {
       document.querySelectorAll("[data-copy]").forEach((btn) => {
@@ -1075,6 +1674,10 @@
 
     // Render last AI quiz if available
     renderLastAIQuizToDashboard();
+
+    // Render last manual quiz if available
+    renderLastManualQuizToDashboard();
+
 
     // Default view: dashboard if available
     if (document.getElementById("view-dashboard")) {
