@@ -1,614 +1,613 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
 
-  if (token) {
-    const user = {
-      token,
-      name: params.get("name"),
-      email: params.get("email"),
-      provider: "social"
-    };
 
-    localStorage.setItem("samarpanUser", JSON.stringify(user));
-    updateUIOnLogin(user);
+(function () {
+  // ---------------- Configuration ----------------
+  const API_BASE = "https://samarpan-svm9.onrender.com"; // backend base URL
 
-    // URL clean karo
-    window.history.replaceState({}, document.title, window.location.pathname);
+  // ---------------- Utilities ----------------
+  const safeParse = (s, fallback = null) => {
+    try { return s ? JSON.parse(s) : fallback; } catch { return fallback; }
+  };
+
+  function getCurrentUser() {
+    return safeParse(localStorage.getItem("samarpanUser"), null);
   }
 
-  // agar already logged in hai to UI update
-  const existing = getCurrentUser();
-  if (existing) updateUIOnLogin(existing);
-});
-// SOCIAL LOGIN RETURN HANDLER
-const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get("token");
-const name  = urlParams.get("name");
-const email = urlParams.get("email");
-
-if (token && email) {
-  localStorage.setItem("samarpanUser", JSON.stringify({ token, name, email }));
-  updateUIOnLogin({ name, email });
-  history.replaceState(null, "", window.location.pathname);
-}
-
-
-
-
-// ================== BASIC TAB SWITCH + ANIMATION ==================
-const views        = document.querySelectorAll(".view");
-const viewTriggers = document.querySelectorAll("[data-view]");
-const sideLinks    = document.querySelectorAll(".side-link");
-const flashBar     = document.getElementById("switchFlash");
-
-// helper: programmatically view change karne ke liye
-function showView(viewName) {
-  const targetId = `view-${viewName}`;
-  const nextView = document.getElementById(targetId);
-  if (!nextView) return;
-
-  views.forEach((v) => v.classList.remove("view-active", "view-anim-in"));
-  nextView.classList.add("view-active");
-  void nextView.offsetWidth;          // reflow for animation
-  nextView.classList.add("view-anim-in");
-
-  if (flashBar) {
-    flashBar.classList.remove("flash-go");
-    void flashBar.offsetWidth;
-    flashBar.classList.add("flash-go");
+  function setCurrentUser(obj) {
+    if (!obj) return;
+    localStorage.setItem("samarpanUser", JSON.stringify(obj));
   }
-}
 
-// click se view change
-viewTriggers.forEach((trigger) => {
-  trigger.addEventListener("click", (event) => {
-    event.preventDefault();
+  function clearCurrentUser() {
+    localStorage.removeItem("samarpanUser");
+  }
 
-    const target = trigger.getAttribute("data-view");
-    if (!target) return; // kuch buttons sirf modal ke liye ho sakte hain
+  function showStatusText(el, message, color) {
+    if (!el) return;
+    el.style.color = color || "";
+    el.textContent = message || "";
+  }
 
-    showView(target);
+  // Small helper to run code once DOM is ready
+  function onReady(fn) {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  }
 
-    // sidebar active state
-    if (trigger.classList.contains("side-link")) {
-      sideLinks.forEach((b) => b.classList.remove("active"));
-      trigger.classList.add("active");
+  // ---------------- View switching ----------------
+  function showView(name) {
+    if (!name) return;
+    const viewId = name.startsWith("view-") ? name : `view-${name}`;
+    const next = document.getElementById(viewId);
+    const views = Array.from(document.querySelectorAll(".view"));
+
+    // Hide all views
+    views.forEach(v => {
+      v.classList.remove("view-active", "view-anim-in");
+      // keep display style controlled by classes/CSS; ensure removed animation classes
+    });
+
+    // If view exists, show with animation classes (if CSS expects them)
+    if (next) {
+      next.classList.add("view-active");
+      // trigger reflow for animations
+      void next.offsetWidth;
+      next.classList.add("view-anim-in");
+    } else if (views[0]) {
+      // fallback: if requested view missing, show first available view
+      views[0].classList.add("view-active");
     }
-  });
-});
 
-// ================== SIDEBAR TOGGLE (MOBILE) ==================
-const sidebar       = document.querySelector(".sidebar");
-const sidebarToggle = document.getElementById("sidebarToggle");
-const main          = document.querySelector(".main");
-
-if (sidebar && sidebarToggle) {
-  sidebarToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-  });
-}
-
-if (main && sidebar) {
-  main.addEventListener("click", () => {
-    sidebar.classList.remove("open");
-  });
-}
-
-// ================== YEAR IN FOOTER (optional) ==================
-const yearSpan = document.getElementById("year");
-if (yearSpan) {
-  yearSpan.textContent = new Date().getFullYear();
-}
-
-// ================== AUTH + MODAL LOGIC ==================
-
-// ===== UI UPDATE AFTER LOGIN =====
-function updateUIOnLogin(user) {
-  const sidebarName = document.querySelector(".user-name");
-  const sidebarRole = document.querySelector(".user-role");
-  const avatarTop   = document.getElementById("btnAvatarTop");
-  const authBtnTop  = document.getElementById("btnAuthTop");
-
-  const displayName = user.name || user.email || "User";
-  const firstLetter = displayName.charAt(0).toUpperCase();
-
-  // sidebar name
-  if (sidebarName) sidebarName.textContent = displayName;
-  if (sidebarRole) sidebarRole.textContent = "Logged in";
-
-  // TOP AVATAR → image agar available hai, warna first letter
-  if (avatarTop) {
-    if (user.avatar) {
-      avatarTop.innerHTML = `<img src="${user.avatar}" class="profile-img" alt="avatar">`;
-    } else {
-      avatarTop.textContent = firstLetter;
+    // optional flash effect if present
+    const flash = document.getElementById("switchFlash");
+    if (flash) {
+      flash.classList.remove("flash-go");
+      void flash.offsetWidth;
+      flash.classList.add("flash-go");
     }
   }
 
-  // "Sign up / Log in" button ko Profile bana do
-  if (authBtnTop) {
-    authBtnTop.textContent = "Profile";
-    authBtnTop.classList.add("top-btn-loggedin");
+  // ---------------- Auth modal helpers ----------------
+  function openAuthModal() {
+    const overlay = document.getElementById("authOverlay");
+    const status = document.getElementById("authStatus");
+    if (!overlay) return;
+    overlay.classList.remove("hidden");
+    showStatusText(status, "", "#4b5563");
   }
-}
 
-
-// ---- modal elements (Kahoot style auth card) ----
-const authOverlay  = document.getElementById("authOverlay");
-const authCloseBtn = document.getElementById("authCloseBtn");
-const tabLogin     = document.getElementById("tabLogin");
-const tabSignup    = document.getElementById("tabSignup");
-const loginPanel   = document.getElementById("loginPanel");
-const signupPanel  = document.getElementById("signupPanel");
-const authTitle    = document.getElementById("authTitle");
-const authSubtitle = document.getElementById("authSubtitle");
-const authStatus   = document.getElementById("authStatus");
-const authGoSignup = document.getElementById("authGoSignup");
-
-const btnHostTop   = document.getElementById("btnHostTop");
-const btnAuthTop   = document.getElementById("btnAuthTop");
-const btnAvatarTop = document.getElementById("btnAvatarTop");
-const btnLogout = document.getElementById("btnLogout");
-
-// ---- open / close helpers ----
-function openAuthModal() {
-  if (!authOverlay) return;
-  authOverlay.classList.remove("hidden");
-  if (authStatus) {
-    authStatus.style.color = "#b91c1c"; // default red for future errors
-    authStatus.textContent = "";
+  function closeAuthModal() {
+    const overlay = document.getElementById("authOverlay");
+    if (!overlay) return;
+    overlay.classList.add("hidden");
   }
-}
 
-function closeAuthModal() {
-  if (!authOverlay) return;
-  authOverlay.classList.add("hidden");
-}
-
-// ---- current user helper ----
-function getCurrentUser() {
-  try {
-    return JSON.parse(localStorage.getItem("samarpanUser") || "null");
-  } catch {
-    return null;
-  }
-}
-
-// ---- feature lock helper (Host, Create, etc.) ----
-function requireLogin(message = "Please log in to use this feature.") {
-  const user = getCurrentUser();
-  if (!user) {
-    openAuthModal();
-    if (authStatus) {
-      authStatus.style.color = "#b91c1c";
-      authStatus.textContent = message;
+  function requireLogin(message = "Please log in to use this feature.") {
+    const user = getCurrentUser();
+    if (!user) {
+      openAuthModal();
+      showStatusText(document.getElementById("authStatus"), message, "#b91c1c");
+      return false;
     }
-    return false;
+    return true;
   }
-  return true;
-}
 
-// ---- close modal events ----
-if (authCloseBtn) {
-  authCloseBtn.addEventListener("click", closeAuthModal);
-}
-if (authOverlay) {
-  authOverlay.addEventListener("click", (e) => {
-    if (e.target === authOverlay) closeAuthModal();
-  });
-}
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeAuthModal();
-});
+  // ---------------- UI update after login ----------------
+  function updateUIOnLogin(user) {
+    const sidebarName = document.querySelector(".user-name");
+    const sidebarRole = document.querySelector(".user-role");
+    const avatarTop   = document.getElementById("btnAvatarTop");
+    const authBtnTop  = document.getElementById("btnAuthTop");
+    const btnLogout   = document.getElementById("btnLogout");
 
-// ================== LOGIN <-> SIGNUP TABS ==================
-if (tabLogin && tabSignup && loginPanel && signupPanel) {
-  tabLogin.addEventListener("click", () => {
-    tabLogin.classList.add("auth-tab-active");
-    tabSignup.classList.remove("auth-tab-active");
-    loginPanel.style.display = "block";
-    signupPanel.style.display = "none";
-    if (authTitle)    authTitle.textContent    = "Log in";
-    if (authSubtitle) authSubtitle.textContent = "Sign in to continue using Samarpan.";
-    if (authStatus)   authStatus.textContent   = "";
-  });
+    const displayName = (user && (user.name || user.email)) || "User";
+    const firstLetter = displayName.charAt(0).toUpperCase();
 
-  tabSignup.addEventListener("click", () => {
-    tabSignup.classList.add("auth-tab-active");
-    tabLogin.classList.remove("auth-tab-active");
-    loginPanel.style.display = "none";
-    signupPanel.style.display = "block";
-    if (authTitle)    authTitle.textContent    = "Create your Samarpan account";
-    if (authSubtitle) authSubtitle.textContent = "Tournaments, quizzes and rating in one place.";
-    if (authStatus)   authStatus.textContent   = "";
-  });
-}
+    if (sidebarName) sidebarName.textContent = displayName;
+    if (sidebarRole) sidebarRole.textContent = (user ? "Logged in" : "Host");
 
-// bottom text link: "Don’t have an account? Sign up"
-if (authGoSignup && tabSignup) {
-  authGoSignup.addEventListener("click", (e) => {
-    e.preventDefault();
-    tabSignup.click();
-  });
-}
+    if (avatarTop) {
+      if (user && user.avatar) avatarTop.innerHTML = `<img src="${user.avatar}" class="profile-img" alt="avatar">`;
+      else avatarTop.textContent = firstLetter;
+    }
 
-// ================== API BASE URL ==================
-const API_BASE = "https://samarpan-svm9.onrender.com";
-
-// ================== SIGNUP REQUEST ==================
-const signupBtn = document.getElementById("signupSubmit");
-if (signupBtn) {
-  signupBtn.addEventListener("click", async () => {
-    const name     = document.getElementById("signupName")?.value.trim();
-    const email    = document.getElementById("signupEmail")?.value.trim();
-    const password = document.getElementById("signupPassword")?.value.trim();
-
-    if (!name || !email || !password) {
-      if (authStatus) {
-        authStatus.style.color = "#b91c1c";
-        authStatus.textContent = "Please fill all fields.";
+    if (authBtnTop) {
+      if (user) {
+        authBtnTop.textContent = "Profile";
+        authBtnTop.classList.add("top-btn-loggedin");
+      } else {
+        authBtnTop.textContent = "Sign up / Log in";
+        authBtnTop.classList.remove("top-btn-loggedin");
       }
-      return;
     }
 
-    if (authStatus) {
-      authStatus.style.color = "#4b5563";
-      authStatus.textContent = "Creating account...";
-    }
+    if (btnLogout) btnLogout.style.display = user ? "inline-flex" : "none";
+  }
 
+  // ---------------- Social token handling (SSO) ----------------
+  function handleTokenInURL() {
     try {
-      const res = await fetch(`${API_BASE}/api/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (!token) return;
+
+      const user = {
+        token,
+        name: params.get("name") || "",
+        email: params.get("email") || "",
+        avatar: params.get("avatar") || ""
+      };
+      setCurrentUser(user);
+      updateUIOnLogin(user);
+
+      // remove query params from URL
+      const url = new URL(window.location);
+      url.search = "";
+      window.history.replaceState({}, document.title, url.toString());
+    } catch (e) {
+      console.warn("handleTokenInURL:", e);
+    }
+  }
+
+  // ---------------- Render last AI-generated quiz ----------------
+  function renderLastAIQuizToDashboard() {
+    try {
+      const raw = localStorage.getItem("samarpanLastAIQuiz");
+      if (!raw) return;
+      const quiz = safeParse(raw, null);
+      if (!quiz) return;
+
+      const quizGrid = document.querySelector(".quiz-grid") || document.getElementById("quizGrid");
+      if (!quizGrid) return;
+
+      const card = document.createElement("div");
+      card.className = "quiz-card";
+      const qcount = (quiz.questions && quiz.questions.length) || 0;
+      card.innerHTML = `
+        <h4>${quiz.title || "AI Quiz"}</h4>
+        <p>${qcount} questions • AI-generated</p>
+        <div class="quiz-meta">
+          <small>AI • just now</small>
+          <div style="margin-top:6px">
+            <button class="mini-btn view-quiz">Play</button>
+            <button class="mini-btn edit-quiz">Edit</button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector(".view-quiz")?.addEventListener("click", () => {
+        localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+        if (document.getElementById("view-player")) showView("player");
+      });
+      card.querySelector(".edit-quiz")?.addEventListener("click", () => {
+        localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+        if (document.getElementById("view-create")) showView("create");
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        if (authStatus) {
-          authStatus.style.color = "#b91c1c";
-          authStatus.textContent = data.error || "Signup failed.";
-        }
-        return;
-      }
-
-      if (authStatus) {
-        authStatus.style.color = "#16a34a";
-        authStatus.textContent = "Signup successful! You can log in now.";
-      }
-
-      if (tabLogin) tabLogin.click(); // switch to login tab
-    } catch (err) {
-      console.error("Signup error:", err);
-      if (authStatus) {
-        authStatus.style.color = "#b91c1c";
-        authStatus.textContent = "Network error. Please try again.";
-      }
+      quizGrid.prepend(card);
+    } catch (e) {
+      console.warn("renderLastAIQuizToDashboard error:", e);
     }
-  });
-}
-
-// ================== LOGIN REQUEST ==================
-const loginBtn = document.getElementById("loginSubmit");
-if (loginBtn) {
-  loginBtn.addEventListener("click", async () => {
-    const email    = document.getElementById("loginEmail")?.value.trim();
-    const password = document.getElementById("loginPassword")?.value.trim();
-
-    if (!email || !password) {
-      if (authStatus) {
-        authStatus.style.color = "#b91c1c";
-        authStatus.textContent = "Enter email and password.";
-      }
-      return;
-    }
-
-    if (authStatus) {
-      authStatus.style.color = "#4b5563";
-      authStatus.textContent = "Logging in...";
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        if (authStatus) {
-          authStatus.style.color = "#b91c1c";
-          authStatus.textContent = data.error || "Login failed.";
-        }
-        return;
-      }
-
-      // Success UI
-      if (authStatus) {
-        authStatus.style.color = "#16a34a";
-        authStatus.textContent = "Login successful!";
-      }
-
-      // user ko localStorage me save karo
-      localStorage.setItem("samarpanUser", JSON.stringify(data));
-
-      // UI ko login state me shift karo
-      updateUIOnLogin(data);
-
-      // optional: profile details fill (agar tumne IDs use kiye ho)
-      const profileName  = document.getElementById("profileName");
-      const profileEmail = document.getElementById("profileEmail");
-      if (profileName && data.name)  profileName.textContent  = data.name;
-      if (profileEmail && data.email) profileEmail.textContent = data.email;
-
-      setTimeout(() => {
-        closeAuthModal();
-      }, 700);
-    } catch (err) {
-      console.error("Login error:", err);
-      if (authStatus) {
-        authStatus.style.color = "#b91c1c";
-        authStatus.textContent = "Network error. Please try again.";
-      }
-    }
-  });
-}
-
-// ================== AI QUIZ (GPT) REQUEST ==================
-const aiGenerateBtn = document.getElementById("aiGenerateBtn");
-const aiStatus      = document.getElementById("aiStatus");
-
-if (aiGenerateBtn) {
-  aiGenerateBtn.addEventListener("click", async () => {
-    // login required for AI quiz
-    if (!requireLogin("Please log in to generate AI quizzes.")) return;
-
-    const currentUser = getCurrentUser();
-
-    const titleRaw      = document.getElementById("aiTitle")?.value.trim();
-    const topic         = document.getElementById("aiTopic")?.value.trim();
-    const difficulty    = document.getElementById("aiDifficulty")?.value || "medium";
-    const countRaw      = document.getElementById("aiCount")?.value;
-    const questionCount = Number(countRaw) || 5;
-
-    const title = titleRaw || "AI Quiz";
-
-    if (!topic) {
-      if (aiStatus) {
-        aiStatus.style.color = "#b91c1c";
-        aiStatus.textContent = "Please enter a topic for the quiz.";
-      }
-      return;
-    }
-
-    if (aiStatus) {
-      aiStatus.style.color = "#4b5563";
-      aiStatus.textContent = "Generating AI quiz...";
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/ai/generate-quiz`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          topic,
-          difficulty,
-          count: questionCount,
-          userId: currentUser?.userId || currentUser?._id || currentUser?.email,
-          tags: [topic.toLowerCase()],
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (aiStatus) {
-          aiStatus.style.color = "#b91c1c";
-          aiStatus.textContent = data.error || "AI quiz generation failed.";
-        }
-        return;
-      }
-
-      // AI quiz ko localStorage me store kar lo (future use ke liye)
-      if (data.quiz) {
-        localStorage.setItem("samarpanLastAIQuiz", JSON.stringify(data.quiz));
-      }
-
-      if (aiStatus) {
-        aiStatus.style.color = "#16a34a";
-        aiStatus.textContent = "AI quiz generated successfully!";
-      }
-
-      console.log("AI Quiz:", data.quiz);
-      // TODO: yahan se tum quiz ko UI me render kar sakte ho (question list etc.)
-    } catch (err) {
-      console.error("AI Quiz Error (frontend):", err);
-      if (aiStatus) {
-        aiStatus.style.color = "#b91c1c";
-        aiStatus.textContent = "Network error while generating quiz.";
-      }
-    }
-  });
-}
-
-// ================= SOCIAL LOGIN =================
-
-// Google sign-in
-const socialGoogle = document.getElementById("socialGoogle");
-if (socialGoogle) {
-  socialGoogle.addEventListener("click", () => {
-    window.location.href = `${API_BASE}/auth/google`;
-  });
-}
-
-// Facebook sign-in
-const socialFacebook = document.getElementById("socialFacebook");
-if (socialFacebook) {
-  socialFacebook.addEventListener("click", () => {
-    window.location.href = `${API_BASE}/auth/facebook`;
-  });
-}
-
-
-// ================== PROTECT IMPORTANT FEATURES ==================
-const protectedActions = [
-  "toolCreateManual",    // dashboard -> Create quiz (manual)
-  "toolCreateAI",        // dashboard -> Create quiz (AI)
-  "toolLiveTournaments", // dashboard -> Live tournaments
-];
-
-protectedActions.forEach((id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  el.addEventListener("click", (e) => {
-    if (!requireLogin()) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  });
-});
-
-// ========== SOCIAL LOGIN RETURN HANDLER ==========
-(function handleSocialCallback() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token  = urlParams.get("token");
-  const name   = urlParams.get("name");
-  const email  = urlParams.get("email");
-  const avatar = urlParams.get("avatar");
-
-  if (token && email) {
-    const userObj = { token, name, email, avatar };
-    localStorage.setItem("samarpanUser", JSON.stringify(userObj));
-    updateUIOnLogin(userObj);
-
-    // URL clean kar do (?token=... hatao)
-    history.replaceState(null, "", window.location.pathname);
   }
+
+  // ---------------- Attach event handlers ----------------
+  function attachHandlers() {
+    // Sidebar toggle (mobile)
+    (function () {
+      const sidebar = document.querySelector(".sidebar");
+      const sidebarToggle = document.getElementById("sidebarToggle");
+      const main = document.querySelector(".main");
+      if (sidebar && sidebarToggle) {
+        sidebarToggle.addEventListener("click", () => sidebar.classList.toggle("open"));
+      }
+      if (main && sidebar) {
+        main.addEventListener("click", () => sidebar.classList.remove("open"));
+      }
+    })();
+
+    // Year in footer
+    (function () {
+      const yearSpan = document.getElementById("year");
+      if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+    })();
+
+    // Data-view links (primary navigation)
+    (function () {
+      document.querySelectorAll("[data-view]").forEach(el => {
+        el.addEventListener("click", (e) => {
+          e.preventDefault();
+          const view = el.getAttribute("data-view");
+          const user = getCurrentUser();
+          if ((view === "view-auth" || view === "view-login") && user) { showView("dashboard"); return; }
+          showView(view);
+          if (el.classList.contains("side-link")) {
+            document.querySelectorAll(".side-link").forEach(b => b.classList.remove("active"));
+            el.classList.add("active");
+          }
+        });
+      });
+    })();
+
+    // Auth modal open/close and tabs
+    (function () {
+      const authOverlay = document.getElementById("authOverlay");
+      const authCloseBtn = document.getElementById("authCloseBtn");
+      const tabLogin = document.getElementById("tabLogin");
+      const tabSignup = document.getElementById("tabSignup");
+      const loginPanel = document.getElementById("loginPanel");
+      const signupPanel = document.getElementById("signupPanel");
+      const authTitle = document.getElementById("authTitle");
+      const authSubtitle = document.getElementById("authSubtitle");
+      const authStatus = document.getElementById("authStatus");
+      const authGoSignup = document.getElementById("authGoSignup");
+
+      if (authCloseBtn) authCloseBtn.addEventListener("click", closeAuthModal);
+      if (authOverlay) {
+        authOverlay.addEventListener("click", (e) => { if (e.target === authOverlay) closeAuthModal(); });
+      }
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAuthModal(); });
+
+      if (tabLogin && tabSignup && loginPanel && signupPanel) {
+        tabLogin.addEventListener("click", () => {
+          tabLogin.classList.add("auth-tab-active");
+          tabSignup.classList.remove("auth-tab-active");
+          loginPanel.style.display = "block";
+          signupPanel.style.display = "none";
+          if (authTitle) authTitle.textContent = "Log in";
+          if (authSubtitle) authSubtitle.textContent = "Sign in to continue using Samarpan.";
+          if (authStatus) authStatus.textContent = "";
+        });
+
+        tabSignup.addEventListener("click", () => {
+          tabSignup.classList.add("auth-tab-active");
+          tabLogin.classList.remove("auth-tab-active");
+          loginPanel.style.display = "none";
+          signupPanel.style.display = "block";
+          if (authTitle) authTitle.textContent = "Create your Samarpan account";
+          if (authSubtitle) authSubtitle.textContent = "Tournaments, quizzes and rating in one place.";
+          if (authStatus) authStatus.textContent = "";
+        });
+      }
+
+      if (authGoSignup && tabSignup) {
+        authGoSignup.addEventListener("click", (e) => { e.preventDefault(); tabSignup.click(); });
+      }
+    })();
+
+    // Signup
+    (function () {
+      const signupBtn = document.getElementById("signupSubmit");
+      const authStatus = document.getElementById("authStatus");
+      if (!signupBtn) return;
+      signupBtn.addEventListener("click", async () => {
+        const name     = document.getElementById("signupName")?.value.trim();
+        const email    = document.getElementById("signupEmail")?.value.trim();
+        const password = document.getElementById("signupPassword")?.value.trim();
+
+        if (!name || !email || !password) {
+          showStatusText(authStatus, "Please fill all fields.", "#b91c1c");
+          return;
+        }
+        showStatusText(authStatus, "Creating account...", "#4b5563");
+
+        try {
+          const res = await fetch(`${API_BASE}/api/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showStatusText(authStatus, data.error || "Signup failed.", "#b91c1c");
+            return;
+          }
+          showStatusText(authStatus, "Signup successful! You can log in now.", "#16a34a");
+          document.getElementById("tabLogin")?.click();
+        } catch (err) {
+          console.error("Signup error:", err);
+          showStatusText(authStatus, "Network error. Please try again.", "#b91c1c");
+        }
+      });
+    })();
+
+    // Login
+    (function () {
+      const loginBtn = document.getElementById("loginSubmit");
+      const authStatus = document.getElementById("authStatus");
+      if (!loginBtn) return;
+      loginBtn.addEventListener("click", async () => {
+        const email = document.getElementById("loginEmail")?.value.trim();
+        const password = document.getElementById("loginPassword")?.value.trim();
+        if (!email || !password) {
+          showStatusText(authStatus, "Enter email and password.", "#b91c1c");
+          return;
+        }
+        showStatusText(authStatus, "Logging in...", "#4b5563");
+
+        try {
+          const res = await fetch(`${API_BASE}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showStatusText(authStatus, data.error || "Login failed.", "#b91c1c");
+            return;
+          }
+          showStatusText(authStatus, "Login successful!", "#16a34a");
+
+          setCurrentUser(data);
+          updateUIOnLogin(data);
+
+          const profileName  = document.getElementById("profileName");
+          const profileEmail = document.getElementById("profileEmail");
+          if (profileName && data.name) profileName.textContent = data.name;
+          if (profileEmail && data.email) profileEmail.textContent = data.email;
+
+          setTimeout(closeAuthModal, 700);
+        } catch (err) {
+          console.error("Login error:", err);
+          showStatusText(authStatus, "Network error. Please try again.", "#b91c1c");
+        }
+      });
+    })();
+
+    // Social login buttons
+    (function () {
+      const socialGoogle = document.getElementById("socialGoogle");
+      if (socialGoogle) socialGoogle.addEventListener("click", () => { window.location.href = `${API_BASE}/auth/google`; });
+      const socialFacebook = document.getElementById("socialFacebook");
+      if (socialFacebook) socialFacebook.addEventListener("click", () => { window.location.href = `${API_BASE}/auth/facebook`; });
+    })();
+
+    // AI generate
+    (function () {
+      const aiGenerateBtn = document.getElementById("aiGenerateBtn");
+      const aiStatus = document.getElementById("aiStatus");
+      if (!aiGenerateBtn) return;
+      aiGenerateBtn.addEventListener("click", async () => {
+        if (!requireLogin("Please log in to generate AI quizzes.")) return;
+
+        const currentUser = getCurrentUser();
+        const titleRaw = document.getElementById("aiTitle")?.value.trim();
+        const topic = document.getElementById("aiTopic")?.value.trim();
+        const difficulty = document.getElementById("aiDifficulty")?.value || "medium";
+        const questionCount = Number(document.getElementById("aiCount")?.value) || 5;
+        const title = titleRaw || "AI Quiz";
+
+        if (!topic) {
+          showStatusText(aiStatus, "Please enter a topic for the quiz.", "#b91c1c");
+          return;
+        }
+        showStatusText(aiStatus, "Generating AI quiz...", "#4b5563");
+
+        try {
+          const res = await fetch(`${API_BASE}/api/ai/generate-quiz`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title, topic, difficulty, count: questionCount,
+              userId: currentUser?.userId || currentUser?._id || currentUser?.email,
+              tags: [topic.toLowerCase()],
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showStatusText(aiStatus, data.error || "AI quiz generation failed.", "#b91c1c");
+            return;
+          }
+          if (data.quiz) localStorage.setItem("samarpanLastAIQuiz", JSON.stringify(data.quiz));
+          showStatusText(aiStatus, "AI quiz generated successfully!", "#16a34a");
+          renderLastAIQuizToDashboard();
+        } catch (err) {
+          console.error("AI Quiz Error:", err);
+          showStatusText(aiStatus, "Network error while generating quiz.", "#b91c1c");
+        }
+      });
+    })();
+
+    // Create quiz (manual)
+    (function () {
+      const createForm = document.getElementById("createQuizForm");
+      if (!createForm) return;
+      createForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("createTitle")?.value.trim() || "Untitled";
+        const questionsRaw = document.getElementById("createQuestions")?.value || "[]";
+        let questions;
+        try { questions = JSON.parse(questionsRaw); } catch {
+          questions = questionsRaw.split("\n").filter(Boolean).map(t => ({ text: t, options: [], answer: null }));
+        }
+        const payload = { title, questions, author: getCurrentUser()?.email || null };
+
+        try {
+          const res = await fetch(`${API_BASE}/quizzes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            alert(err.message || "Failed to create quiz on server. Saving locally.");
+            const key = "samarpanUserQuizzes";
+            const arr = safeParse(localStorage.getItem(key), []);
+            arr.push(payload);
+            localStorage.setItem(key, JSON.stringify(arr));
+            renderLocalCreatedQuiz(payload);
+            showView("dashboard");
+            return;
+          }
+          const data = await res.json();
+          renderNewlyCreatedQuiz(data.quiz || payload);
+          showView("dashboard");
+        } catch (err) {
+          console.error("create quiz err:", err);
+          const key = "samarpanUserQuizzes";
+          const arr = safeParse(localStorage.getItem(key), []);
+          arr.push(payload);
+          localStorage.setItem(key, JSON.stringify(arr));
+          renderLocalCreatedQuiz(payload);
+          showView("dashboard");
+        }
+      });
+    })();
+
+    // Leaderboard
+    (function () {
+      const btn = document.getElementById("leaderboardBtn");
+      if (!btn) return;
+      btn.addEventListener("click", async () => {
+        try {
+          const res = await fetch(`${API_BASE}/leaderboard`);
+          if (!res.ok) { alert("Failed to fetch leaderboard"); return; }
+          const data = await res.json();
+          const container = document.getElementById("leaderboardContainer");
+          if (container) container.innerHTML = (data.scores || []).map(s => `<div class="leader-item"><span>${s.name}</span><span>${s.score}</span></div>`).join("");
+          showView("leaderboard");
+        } catch (err) {
+          console.error("leaderboard err:", err);
+          alert("Error loading leaderboard");
+        }
+      });
+    })();
+
+    // Explore (public quizzes)
+    (function () {
+      const btn = document.getElementById("exploreBtn");
+      if (!btn) return;
+      btn.addEventListener("click", async () => {
+        try {
+          const res = await fetch(`${API_BASE}/quizzes/public`);
+          if (!res.ok) { alert("Failed to fetch public quizzes"); return; }
+          const data = await res.json();
+          const container = document.getElementById("exploreContainer");
+          if (container) container.innerHTML = (data.quizzes || []).map(q => `<div class="explore-item"><h4>${q.title}</h4><p>${(q.questions && q.questions.length) || 0} questions</p></div>`).join("");
+          showView("explore");
+        } catch (err) {
+          console.error("explore err:", err);
+          alert("Error loading explore");
+        }
+      });
+    })();
+
+    // Rating history
+    (function () {
+      const btn = document.getElementById("ratingHistoryBtn");
+      if (!btn) return;
+      btn.addEventListener("click", async () => {
+        const user = getCurrentUser();
+        if (!user) { alert("Please login first"); return; }
+        try {
+          const res = await fetch(`${API_BASE}/ratings/${encodeURIComponent(user.email)}`);
+          if (!res.ok) { alert("Could not fetch rating history"); return; }
+          const data = await res.json();
+          const modal = document.getElementById("ratingModal");
+          const container = document.getElementById("ratingHistoryContainer");
+          if (!modal || !container) { alert("Rating UI not present"); return; }
+          container.innerHTML = (data.history || []).map(h => `<div class="rating-item"><strong>${h.rating}</strong> — ${new Date(h.date).toLocaleString()}</div>`).join("");
+          modal.style.display = "block";
+        } catch (err) {
+          console.error("rating history err:", err);
+          alert("Failed to fetch rating history");
+        }
+      });
+    })();
+
+    // Profile / logout / host / avatar handlers
+    (function () {
+      const profileBtn = document.getElementById("profileBtn");
+      if (profileBtn) profileBtn.addEventListener("click", () => {
+        const user = getCurrentUser();
+        if (!user) { showView("auth"); return; }
+        const profileName = document.getElementById("profileName");
+        const profileEmail = document.getElementById("profileEmail");
+        if (profileName) profileName.textContent = user.name || "";
+        if (profileEmail) profileEmail.textContent = user.email || "";
+        showView("profile");
+      });
+
+      const btnLogout = document.getElementById("btnLogout");
+      if (btnLogout) btnLogout.addEventListener("click", (e) => {
+        e.preventDefault();
+        clearCurrentUser();
+        updateUIOnLogin(null);
+        showView("dashboard");
+      });
+
+      const btnHostTop = document.getElementById("btnHostTop");
+      if (btnHostTop) btnHostTop.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (!requireLogin()) return;
+        showView("host");
+      });
+
+      const btnAuthTop = document.getElementById("btnAuthTop");
+      if (btnAuthTop) btnAuthTop.addEventListener("click", (e) => {
+        e.preventDefault();
+        const user = getCurrentUser();
+        if (user) showView("profile");
+        else openAuthModal();
+      });
+
+      const btnAvatarTop = document.getElementById("btnAvatarTop");
+      if (btnAvatarTop) btnAvatarTop.addEventListener("click", (e) => {
+        e.preventDefault();
+        const user = getCurrentUser();
+        if (user) showView("profile");
+        else openAuthModal();
+      });
+    })();
+
+    // Protect important feature buttons (prevent use when not logged in)
+    (function () {
+      const protectedActions = ["toolCreateManual","toolCreateAI","toolLiveTournaments"];
+      protectedActions.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("click", (e) => {
+          if (!requireLogin()) { e.preventDefault(); e.stopPropagation(); }
+        });
+      });
+    })();
+
+    // Data-copy (clipboard) convenience
+    (function () {
+      document.querySelectorAll("[data-copy]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const key = btn.getAttribute("data-copy");
+          const v = document.getElementById(key)?.textContent || "";
+          if (v) navigator.clipboard.writeText(v).then(() => alert("Copied")).catch(() => alert("Copy failed"));
+        });
+      });
+    })();
+  } // end attachHandlers
+
+  // ---------------- Initialization ----------------
+  onReady(() => {
+    // Apply token if present in URL (SSO redirects)
+    handleTokenInURL();
+
+    // Hydrate UI if user already logged in
+    const existing = getCurrentUser();
+    if (existing) updateUIOnLogin(existing);
+
+    // Attach all event handlers
+    attachHandlers();
+
+    // Render last AI quiz if available
+    renderLastAIQuizToDashboard();
+
+    // Default view: dashboard if available, else leave as is
+    if (document.getElementById("view-dashboard")) showView("dashboard");
+  });
+
+  // ---------------- Expose a small API for debugging ----------------
+  window.Samarpan = {
+    getCurrentUser,
+    setCurrentUser,
+    clearCurrentUser,
+    showView,
+    renderLastAIQuizToDashboard
+  };
 })();
-
-
-// Host button: login required, then host view
-if (btnHostTop) {
-  btnHostTop.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (!requireLogin()) return;
-    showView("host");
-  });
-}
-
-// Auth button: if not logged in -> modal, else -> profile view
-if (btnAuthTop) {
-  btnAuthTop.addEventListener("click", (e) => {
-    e.preventDefault();
-    const user = getCurrentUser();
-    if (user) {
-      showView("profile");
-    } else {
-      openAuthModal();
-    }
-  });
-}
-
-// Avatar: same behaviour as profile
-if (btnAvatarTop) {
-  btnAvatarTop.addEventListener("click", (e) => {
-    e.preventDefault();
-    const user = getCurrentUser();
-    if (user) {
-      showView("profile");
-    } else {
-      openAuthModal();
-    }
-  });
-}
-
-// ================== AUTO-LOGIN ON PAGE LOAD ==================
-document.addEventListener("DOMContentLoaded", () => {
-  const existing = getCurrentUser();
-  if (existing) {
-    updateUIOnLogin(existing);
-  }
-});
-// ===== LOGOUT LOGIC =====
-
-
-function logoutUser() {
-  // local storage se user hatao
-  localStorage.removeItem("samarpanUser");
-
-  // basic UI reset
-  const sidebarName = document.querySelector(".user-name");
-  const sidebarRole = document.querySelector(".user-role");
-  const avatarTop   = document.getElementById("btnAvatarTop");
-  const authBtnTop  = document.getElementById("btnAuthTop");
-
-  if (sidebarName) sidebarName.textContent = "Aman";
-  if (sidebarRole) sidebarRole.textContent = "Host";
-  if (avatarTop)   avatarTop.textContent   = "A";
-
-  if (authBtnTop) {
-    authBtnTop.textContent = "Sign up / Log in";
-    authBtnTop.classList.remove("top-btn-loggedin");
-  }
-
-  if (btnLogout) {
-    btnLogout.style.display = "none";
-  }
-
-  // optional: dashboard pe wapas le jao
-  showView("dashboard");
-}
-if (btnLogout) {
-  btnLogout.addEventListener("click", (e) => {
-    e.preventDefault();
-    logoutUser();
-  });
-}
-
-// login hone ke baad logout button dikhao
-function updateUIOnLogin(user) {
-  const sidebarName = document.querySelector(".user-name");
-  const sidebarRole = document.querySelector(".user-role");
-  const avatarTop   = document.getElementById("btnAvatarTop");
-  const authBtnTop  = document.getElementById("btnAuthTop");
-
-  const displayName = user.name || user.email || "User";
-  const firstLetter = displayName.charAt(0).toUpperCase();
-
-  if (sidebarName) sidebarName.textContent = displayName;
-  if (sidebarRole) sidebarRole.textContent = "Logged in";
-
-  if (avatarTop) avatarTop.textContent = firstLetter;
-
-  if (authBtnTop) {
-    authBtnTop.textContent = "Profile";
-    authBtnTop.classList.add("top-btn-loggedin");
-  }
-
-  if (btnLogout) {
-    btnLogout.style.display = "inline-flex";
-  }
-}
-
-// logout button click
-if (btnLogout) {
-  btnLogout.addEventListener("click", (e) => {
-    e.preventDefault();
-    logoutUser();
-  });
-}
-
-// page load par agar user hai to logout button bhi dikhao
-document.addEventListener("DOMContentLoaded", () => {
-  const existing = getCurrentUser();
-  if (existing) {
-    updateUIOnLogin(existing);
-  } else if (btnLogout) {
-    btnLogout.style.display = "none";
-  }
-});
-
