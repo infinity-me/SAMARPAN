@@ -257,7 +257,10 @@
               <li>Control timer &amp; points per question</li>
               <li>Tag quizzes by topic and level</li>
             </ul>
-            <button class="btn btn-primary">Open manual editor</button>
+           <button class="btn btn-primary" id="btnOpenManualEditor">
+                  Open manual editor
+           </button>
+
           </div>
 
           <div class="card create-card">
@@ -308,6 +311,87 @@
           </ul>
         </div>
       </section>
+
+
+
+      <!-- ========== MANUAL QUIZ EDITOR ========== -->
+<div class="card manual-editor" id="manualEditor" style="display:none; margin-top:1.5rem;">
+  <h3>Manual quiz editor</h3>
+  <p style="color:#9ca3af; font-size:0.9rem;">
+    Add questions manually, options, correct answer and explanation.
+  </p>
+
+  <!-- Quiz level details -->
+  <div class="field">
+    <label for="manualTitle">Quiz title</label>
+    <input type="text" id="manualTitle" placeholder="Eg. DBMS Basics - Set 1" />
+  </div>
+
+  <div class="field">
+    <label for="manualTopic">Topic / tag</label>
+    <input type="text" id="manualTopic" placeholder="Eg. DBMS, Normalization" />
+  </div>
+
+  <div class="field">
+    <label for="manualDifficulty">Default difficulty</label>
+    <select id="manualDifficulty">
+      <option value="easy">Easy</option>
+      <option value="medium" selected>Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+  </div>
+
+  <hr style="border-color:#1f2937; margin:1rem 0;" />
+
+  <!-- Question form -->
+  <h4 style="margin:0 0 .5rem;">Add a question</h4>
+
+  <div class="field">
+    <label for="qText">Question</label>
+    <textarea id="qText" rows="2" placeholder="Type your question here..."></textarea>
+  </div>
+
+  <div class="field">
+    <label>Options</label>
+    <input type="text" id="opt0" placeholder="Option 1" />
+    <input type="text" id="opt1" placeholder="Option 2" style="margin-top:0.35rem;" />
+    <input type="text" id="opt2" placeholder="Option 3 (optional)" style="margin-top:0.35rem;" />
+    <input type="text" id="opt3" placeholder="Option 4 (optional)" style="margin-top:0.35rem;" />
+  </div>
+
+  <div class="field">
+    <label for="correctIndex">Correct option</label>
+    <select id="correctIndex">
+      <option value="0">Option 1</option>
+      <option value="1">Option 2</option>
+      <option value="2">Option 3</option>
+      <option value="3">Option 4</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="qExplanation">Explanation (optional)</label>
+    <textarea id="qExplanation" rows="2" placeholder="Short explanation for this answer..."></textarea>
+  </div>
+
+  <button class="btn btn-outline" id="btnAddQuestion" type="button">
+    + Add question to quiz
+  </button>
+
+  <!-- Current questions list -->
+  <div id="manualQuestionList" style="margin-top:1rem; font-size:0.85rem; color:#e5e7eb;">
+    <p style="margin:0; color:#9ca3af;">No questions added yet.</p>
+  </div>
+
+  <hr style="border-color:#1f2937; margin:1.2rem 0;" />
+
+  <button class="btn btn-primary" id="btnSaveManualQuiz" type="button">
+    Save quiz to Samarpan
+  </button>
+
+  <p id="manualEditorStatus" style="margin-top:.7rem; font-size:0.8rem;"></p>
+</div>
+
 
       <!-- LEADERBOARD VIEW -->
       <section class="view" id="view-leaderboard">
@@ -823,11 +907,11 @@
 
     <!-- Social providers row -->
     <div class="auth-social-row auth-social-row-top">
-  <button class="auth-social-pill" type="button" id="socialGoogle" onclick="window.location.href='https://samarpan-svm9.onrender.com/auth/google'">
+  <button class="auth-social-pill" type="button" id="socialGoogle" onclick="window.location.href='http://localhost:5000/auth/google'">
     <span class="auth-social-icon" >G</span>
     <span>Continue with Google</span>
   </button>
-  <button class="auth-social-pill" type="button" id="socialFacebook" onclick="window.location.href='https://samarpan-svm9.onrender.com/auth/facebook'">
+  <button class="auth-social-pill" type="button" id="socialFacebook" onclick="window.location.href='http://localhost:5000/auth/facebook'">
     <span class="auth-social-icon">f</span>
     <span>Continue with Facebook</span>
   </button>

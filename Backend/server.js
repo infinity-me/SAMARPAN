@@ -1,5 +1,7 @@
 // Backend/server.js
 require("dotenv").config();
+const Quiz = require("./models/Quiz");
+
 
 console.log("ENV CHECK → FRONTEND_URL:", process.env.FRONTEND_URL);
 console.log("ENV CHECK → GOOGLE_CALLBACK_URL:", process.env.GOOGLE_CALLBACK_URL);
@@ -24,11 +26,7 @@ const aiQuizRoutes = require("./routes/aiQuiz"); // AI quiz routes
 const app = express();
 
 // CORS – abhi sab allowed (dev ke liye ok)
-app.use(
-  cors({
-    origin: "*",
-  })
-);
+app.use(cors());          // bas itna hi – origin restrict mat karo abhi
 app.use(express.json());
 app.use(passport.initialize());
 
@@ -143,6 +141,37 @@ app.post("/api/login", async (req, res) => {
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// ====== CREATE QUIZ (MANUAL) ======
+app.post("/api/quizzes", async (req, res) => {
+  try {
+    const { title, topic, authorId, questions, tags, aiGenerated } = req.body;
+
+    if (!title || !authorId || !questions || !questions.length) {
+      return res
+        .status(400)
+        .json({ error: "title, authorId and at least 1 question required" });
+    }
+
+    const quiz = await Quiz.create({
+      title,
+      topic,
+      author: authorId,               // 👈 ObjectId of User
+      questions,                      // 👈 must match questionSchema
+      aiGenerated: !!aiGenerated || false,
+      tags: tags || (topic ? [topic.toLowerCase()] : []),
+    });
+
+    res.json({
+      message: "Quiz created",
+      quizId: quiz._id,
+      quiz,
+    });
+  } catch (err) {
+    console.error("Create quiz error:", err);
+    res.status(500).json({ error: "Failed to create quiz" });
   }
 });
 

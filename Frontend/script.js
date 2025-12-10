@@ -2,7 +2,7 @@
 
 (function () {
   // ---------------- Configuration ----------------
-  const API_BASE = "https://samarpan-svm9.onrender.com"; // backend base URL
+  const API_BASE = "http://localhost:5000"; // backend base URL
 
   // ---------------- Utilities ----------------
   const safeParse = (s, fallback = null) => {
@@ -411,7 +411,7 @@ function showStatusText(el, text, color) {
       if (document.getElementById("view-dashboard")) {
         showView("dashboard");
       } 
-      
+
       setTimeout(() => {
         closeAuthModal();
       }, 700);
@@ -476,51 +476,203 @@ function showStatusText(el, text, color) {
       });
     })();
 
-    // Create quiz (manual)
-    (function () {
-      const createForm = document.getElementById("createQuizForm");
-      if (!createForm) return;
-      createForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const title = document.getElementById("createTitle")?.value.trim() || "Untitled";
-        const questionsRaw = document.getElementById("createQuestions")?.value || "[]";
-        let questions;
-        try { questions = JSON.parse(questionsRaw); } catch {
-          questions = questionsRaw.split("\n").filter(Boolean).map(t => ({ text: t, options: [], answer: null }));
-        }
-        const payload = { title, questions, author: getCurrentUser()?.email || null };
+    // ================== MANUAL QUIZ EDITOR LOGIC ==================
+(function () {
+  // Global array jisme questions store honge
+  let manualQuestions = [];
 
-        try {
-          const res = await fetch(`${API_BASE}/quizzes`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            const err = await res.json();
-            alert(err.message || "Failed to create quiz on server. Saving locally.");
-            const key = "samarpanUserQuizzes";
-            const arr = safeParse(localStorage.getItem(key), []);
-            arr.push(payload);
-            localStorage.setItem(key, JSON.stringify(arr));
-            renderLocalCreatedQuiz(payload);
-            showView("dashboard");
-            return;
-          }
-          const data = await res.json();
-          renderNewlyCreatedQuiz(data.quiz || payload);
-          showView("dashboard");
-        } catch (err) {
-          console.error("create quiz err:", err);
-          const key = "samarpanUserQuizzes";
-          const arr = safeParse(localStorage.getItem(key), []);
-          arr.push(payload);
-          localStorage.setItem(key, JSON.stringify(arr));
-          renderLocalCreatedQuiz(payload);
-          showView("dashboard");
-        }
+  const addBtn    = document.getElementById("btnAddQuestion");
+  const saveBtn   = document.getElementById("btnSaveManualQuiz");
+  const listEl    = document.getElementById("manualQuestionList");
+  const statusEl  = document.getElementById("manualEditorStatus");
+
+  const titleInput = document.getElementById("manualTitle");
+  const topicInput = document.getElementById("manualTopic");
+  const diffSelect = document.getElementById("manualDifficulty");
+
+  if (!addBtn || !saveBtn) {
+    console.warn("Manual editor buttons not found in DOM.");
+    return;
+  }
+
+  // Safe API_BASE (agar upar define hai to wahi use hoga)
+  const API = typeof API_BASE !== "undefined" ? API_BASE : "http://localhost:5000";
+
+  function setStatus(msg, color = "#e5e7eb") {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.style.color = color;
+  }
+
+  function renderQuestionList() {
+    if (!listEl) return;
+
+    if (!manualQuestions.length) {
+      listEl.innerHTML = `<p style="margin:0; color:#9ca3af;">No questions added yet.</p>`;
+      return;
+    }
+
+    const html = manualQuestions
+      .map((q, idx) => {
+        const safeText = q.question.length > 80
+          ? q.question.slice(0, 77) + "..."
+          : q.question;
+        return `
+          <div style="
+            border:1px solid #1f2937;
+            border-radius:8px;
+            padding:0.4rem 0.6rem;
+            margin-bottom:0.4rem;
+            font-size:0.82rem;
+          ">
+            <strong>Q${idx + 1}.</strong> ${safeText}<br/>
+            <span style="color:#9ca3af;">Options: ${q.options.length}, Correct: ${q.correctIndex + 1}, Diff: ${q.difficulty}</span>
+          </div>
+        `;
+      })
+      .join("");
+
+    listEl.innerHTML = html;
+  }
+
+  // ========== ADD QUESTION BUTTON ==========
+  addBtn.addEventListener("click", () => {
+    const qTextEl   = document.getElementById("qText");
+    const opt0El    = document.getElementById("opt0");
+    const opt1El    = document.getElementById("opt1");
+    const opt2El    = document.getElementById("opt2");
+    const opt3El    = document.getElementById("opt3");
+    const corrEl    = document.getElementById("correctIndex");
+    const explEl    = document.getElementById("qExplanation");
+
+    if (!qTextEl || !opt0El || !opt1El || !corrEl) {
+      console.error("Manual editor inputs missing in DOM.");
+      return;
+    }
+
+    const question   = qTextEl.value.trim();
+    const o0         = opt0El.value.trim();
+    const o1         = opt1El.value.trim();
+    const o2         = opt2El?.value.trim() || "";
+    const o3         = opt3El?.value.trim() || "";
+    const explanation = explEl?.value.trim() || "";
+    const correctIndex = Number(corrEl.value || "0");
+
+    if (!question) {
+      setStatus("Please enter a question.", "#b91c1c");
+      return;
+    }
+    if (!o0 || !o1) {
+      setStatus("Please enter at least two options.", "#b91c1c");
+      return;
+    }
+
+    const options = [o0, o1];
+    if (o2) options.push(o2);
+    if (o3) options.push(o3);
+
+    if (correctIndex < 0 || correctIndex >= options.length) {
+      setStatus("Correct option index does not match filled options.", "#b91c1c");
+      return;
+    }
+
+    const difficulty = diffSelect?.value || "medium";
+
+    const newQ = {
+      question,
+      options,
+      correctIndex,
+      explanation,
+      difficulty,
+    };
+
+    manualQuestions.push(newQ);
+
+    // Inputs clear
+    qTextEl.value = "";
+    opt0El.value = "";
+    opt1El.value = "";
+    if (opt2El) opt2El.value = "";
+    if (opt3El) opt3El.value = "";
+    if (explEl) explEl.value = "";
+    corrEl.value = "0";
+
+    setStatus(`Question added (${manualQuestions.length} in quiz).`, "#16a34a");
+    renderQuestionList();
+  });
+
+  // ========== SAVE QUIZ BUTTON ==========
+  saveBtn.addEventListener("click", async () => {
+    const title = titleInput?.value.trim() || "";
+    const topic = topicInput?.value.trim() || "";
+
+    if (!title) {
+      setStatus("Please enter a quiz title before saving.", "#b91c1c");
+      return;
+    }
+    if (!manualQuestions.length) {
+      setStatus("Add at least one question before saving.", "#b91c1c");
+      return;
+    }
+
+    // User check (requireLogin + getCurrentUser tumhare existing code me honge)
+    let user = null;
+    if (typeof getCurrentUser === "function") {
+      user = getCurrentUser();
+    }
+    if (!user) {
+      if (typeof requireLogin === "function") {
+        requireLogin("Please log in to save a quiz.");
+      }
+      setStatus("You must be logged in to save quizzes.", "#b91c1c");
+      return;
+    }
+
+    const authorId = user.userId || user._id || user.email;
+
+    const payload = {
+      title,
+      topic,
+      authorId,
+      questions: manualQuestions,
+      aiGenerated: false,
+      tags: topic ? [topic.toLowerCase()] : [],
+    };
+
+    setStatus("Saving quiz...", "#4b5563");
+
+    try {
+      const res = await fetch(`${API}/api/quizzes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-    })();
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Save quiz error:", data);
+        setStatus(data.error || "Failed to save quiz.", "#b91c1c");
+        return;
+      }
+
+      setStatus("Quiz saved successfully to Samarpan!", "#16a34a");
+      console.log("Saved quiz:", data);
+
+      // Reset state
+      manualQuestions = [];
+      renderQuestionList();
+      if (titleInput) titleInput.value = "";
+      if (topicInput) topicInput.value = "";
+      if (diffSelect) diffSelect.value = "medium";
+    } catch (err) {
+      console.error("Network error while saving quiz:", err);
+      setStatus("Network error while saving quiz.", "#b91c1c");
+    }
+  });
+
+  // Initial render
+  renderQuestionList();
+})();
 
     // Leaderboard
     (function () {
@@ -653,6 +805,8 @@ function showStatusText(el, text, color) {
   } // end attachHandlers
 
 
+
+
   // ---------------- Initialization ----------------
   onReady(() => {
     // Apply token if present in URL (SSO redirects)
@@ -677,6 +831,27 @@ function showStatusText(el, text, color) {
     // Default view: dashboard if available, else leave as is
     if (document.getElementById("view-dashboard")) showView("dashboard");
   });
+    // ========== MANUAL EDITOR OPEN BUTTON ==========
+(function () {
+  const openBtn = document.getElementById("btnOpenManualEditor");
+  const editor  = document.getElementById("manualEditor");
+
+  if (!openBtn || !editor) return;
+
+  openBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // Editor dikhao
+    editor.style.display = "block";
+
+    // Smooth scroll
+    editor.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
+})();
+
 
   // ---------------- Expose a small API for debugging ----------------
   window.Samarpan = {
