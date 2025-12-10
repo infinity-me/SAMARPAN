@@ -257,24 +257,49 @@
               <li>Control timer &amp; points per question</li>
               <li>Tag quizzes by topic and level</li>
             </ul>
-           <button class="btn btn-primary" id="btnOpenManualEditor">
-                  Open manual editor
-           </button>
-
+            <button class="btn btn-primary" id="btnOpenManualEditor">
+              Open manual editor
+            </button>
           </div>
 
           <div class="card create-card">
-            <h3>Use AI from notes / PDFs</h3>
+            <h3>Create using AI</h3>
             <p>
-              Upload your study material and let Samarpan generate a full quiz for
-              you.
+              Type a topic and let Samarpan generate a full quiz for you.
             </p>
             <ul class="small-list">
-              <li>Supports PDF, text, and copy-pasted content</li>
-              <li>Configurable difficulty and number of questions</li>
+              <li>Give topic and difficulty</li>
+              <li>Configurable number of questions</li>
               <li>Edit AI questions before saving</li>
             </ul>
-            <button class="btn btn-outline">Upload file &amp; generate</button>
+
+            <!-- yahan baad me tumhara AI form aa sakta hai -->
+            <div class="field">
+              <label for="aiTopic">Topic</label>
+              <input type="text" id="aiTopic" placeholder="Eg. DBMS Normalization" />
+            </div>
+            <div class="field">
+              <label for="aiTitle">Quiz title (optional)</label>
+              <input type="text" id="aiTitle" placeholder="Eg. DBMS Normalization - Quiz 1" />
+            </div>
+            <div class="field inline-field">
+              <div>
+                <label for="aiDifficulty">Difficulty</label>
+                <select id="aiDifficulty">
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div>
+                <label for="aiCount">No. of questions</label>
+                <input type="number" id="aiCount" value="5" min="1" max="50" />
+              </div>
+            </div>
+            <button class="btn btn-outline" id="aiGenerateBtn" type="button">
+              Create using AI
+            </button>
+            <p id="aiStatus" class="form-note"></p>
           </div>
         </div>
 
@@ -311,6 +336,7 @@
           </ul>
         </div>
       </section>
+
 
 
 
@@ -418,39 +444,8 @@
                 <th>Best rank</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>Aman</td>
-                <td>1430</td>
-                <td>18</td>
-                <td>92%</td>
-                <td>🥇</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Mehak</td>
-                <td>1390</td>
-                <td>15</td>
-                <td>89%</td>
-                <td>🥈</td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>Janvi</td>
-                <td>1365</td>
-                <td>12</td>
-                <td>87%</td>
-                <td>🥉</td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>Sumit</td>
-                <td>1310</td>
-                <td>9</td>
-                <td>81%</td>
-                <td>Top 5</td>
-              </tr>
+            <tbody id="leaderboardBody">
+              <!-- rows JS se aayenge -->
             </tbody>
           </table>
         </div>
@@ -497,28 +492,22 @@
         <div class="explore-grid">
           <div class="card explore-card">
             <h3>Trending quizzes</h3>
-            <ul class="small-list">
-              <li>Intro to DBMS • 24 hosts today</li>
-              <li>C Programming Basics • 19 hosts</li>
-              <li>Verbal Ability Warmup • 15 hosts</li>
+            <ul class="small-list" id="trendingQuizzes">
+              <!-- JS se populate hoga -->
             </ul>
           </div>
 
           <div class="card explore-card">
             <h3>Upcoming tournaments</h3>
-            <ul class="small-list">
-              <li>Friday Night CS Quiz • 8 PM</li>
-              <li>General Aptitude Clash • Tomorrow</li>
-              <li>Python Basics Sprint • Sunday</li>
+            <ul class="small-list" id="upcomingTournaments">
+              <!-- JS se populate hoga -->
             </ul>
           </div>
 
           <div class="card explore-card">
             <h3>Learn &amp; improve</h3>
-            <ul class="small-list">
-              <li>How to write good MCQs</li>
-              <li>Tips for hosting fair tournaments</li>
-              <li>Using AI safely for question generation</li>
+            <ul class="small-list" id="learnImprove">
+              <!-- JS se populate hoga -->
             </ul>
           </div>
         </div>
@@ -534,7 +523,8 @@
             <button class="chip">General Knowledge</button>
           </div>
 
-          <div class="category-grid">
+          <div class="category-grid" id="exploreCategories">
+            <!-- category cards JS se aayenge (abhi static rakh sakte ho) -->
             <div class="card cat-card">
               <h4>Beginner CS Pack</h4>
               <p>3 quizzes • C basics, loops, arrays.</p>
@@ -550,6 +540,7 @@
           </div>
         </div>
       </section>
+
 
       <!-- PROFILE VIEW -->
       <section class="view" id="view-profile">
@@ -689,9 +680,11 @@
               </div>
             </div>
 
-            <button class="btn btn-primary full-width">
-              Generate game PIN &amp; start
+            <button class="btn btn-primary full-width" id="btnHostStart">
+             Generate game PIN &amp; start
             </button>
+            <p id="hostStatus" class="form-note"></p>
+
             <p class="form-note">
               For rated sessions, your rating will increase or decrease based on
               players’ scores and average rating—similar to chess-style matchmaking.
@@ -993,7 +986,3 @@
 <!-- ===================================================== -->
 </body>
 </html>
-<script src="./script.js"></script>
-</body>
-</html>
-

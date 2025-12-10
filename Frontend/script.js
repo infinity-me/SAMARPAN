@@ -712,6 +712,21 @@
           setStatus("Quiz saved successfully to Samarpan!", "#16a34a");
           console.log("Saved quiz:", data);
 
+          // Last manual quiz to localStorage (per user)
+          try {
+            const quizToStore = data.quiz || data.quizDoc || data;
+
+            const u = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+            const userKeyPart =
+              (u && (u.userId || u._id || u.email)) || "guest";
+
+            const storageKey = `samarpanLastManualQuiz_${userKeyPart}`;
+            localStorage.setItem(storageKey, JSON.stringify(quizToStore));
+          } catch (e) {
+            console.warn("Could not store last manual quiz:", e);
+          }
+
+          // Reset state
           manualQuestions = [];
           renderQuestionList();
           if (titleInput) titleInput.value = "";
@@ -724,6 +739,33 @@
       });
 
       renderQuestionList();
+    })();
+
+    // ========== ADD CURRENT USER'S LAST MANUAL QUIZ TO HOST DROPDOWN ==========
+    (function () {
+      const select = document.getElementById("host-quiz");
+      if (!select) return;
+
+      const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+      const userKeyPart =
+        (user && (user.userId || user._id || user.email)) || "guest";
+
+      const storageKey = `samarpanLastManualQuiz_${userKeyPart}`;
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+
+      const quiz = safeParse(raw, null);
+      if (!quiz) return;
+
+      const already = Array.from(select.options).some(
+        (opt) => opt.value === "manual-last"
+      );
+      if (already) return;
+
+      const opt = document.createElement("option");
+      opt.value = "manual-last";
+      opt.textContent = quiz.title || "My last manual quiz";
+      select.appendChild(opt);
     })();
 
     // Leaderboard
@@ -878,6 +920,93 @@
       });
     })();
 
+
+        // ================= HOST QUIZ BUTTON =================
+    (function () {
+      const btn = document.getElementById("btnHostStart");
+      const statusEl = document.getElementById("hostStatus");
+      const selectQuiz = document.getElementById("host-quiz");
+      const selectMode = document.getElementById("host-mode");
+      const inputTimer = document.getElementById("host-timer");
+      const selectRated = document.getElementById("host-rating");
+
+      function setHostStatus(msg, color = "#e5e7eb") {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.style.color = color;
+      }
+
+      if (!btn || !selectQuiz) return;
+
+      btn.addEventListener("click", async () => {
+        if (!requireLogin("Please log in to host a quiz.")) return;
+
+        const user = getCurrentUser();
+        if (!user) return;
+
+        const selected = selectQuiz.value;
+        let quizId = null;
+
+        // sirf "My last manual quiz" ke liye abhi proper host kar rahe hain
+        if (selected === "manual-last") {
+          const userKeyPart =
+            (user.userId || user._id || user.email || "guest");
+          const storageKey = `samarpanLastManualQuiz_${userKeyPart}`;
+          const raw = localStorage.getItem(storageKey);
+          const quiz = safeParse(raw, null);
+          quizId = quiz && (quiz._id || quiz.quizId);
+        }
+
+        if (!quizId) {
+          alert(
+            "Right now, hosting is enabled only for your last manual/AI quiz.\nSelect it in the dropdown."
+          );
+          return;
+        }
+
+        const modeText = (selectMode.value || "").toLowerCase();
+        let mode = "rapid";
+        if (modeText.includes("blitz")) mode = "blitz";
+        else if (modeText.includes("casual")) mode = "casual";
+
+        const timerSeconds = Number(inputTimer.value) || 30;
+        const rated = !selectRated.value.toLowerCase().includes("casual");
+
+        setHostStatus("Creating game session...", "#4b5563");
+
+        try {
+          const res = await fetch(`${API_BASE}/api/host/start`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              quizId,
+              hostEmail: user.email,
+              mode,
+              timerSeconds,
+              rated,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            console.error("Host start error:", data);
+            setHostStatus(data.error || "Failed to start game.", "#b91c1c");
+            return;
+          }
+
+          setHostStatus(
+            `Game started! PIN: ${data.pin}. Share this with players.`,
+            "#16a34a"
+          );
+          alert(`Game PIN: ${data.pin}\n(Prototype – join UI abhi pending)`);
+        } catch (err) {
+          console.error("Host start network error:", err);
+          setHostStatus("Network error while starting game.", "#b91c1c");
+        }
+      });
+    })();
+
+    
     // Data-copy convenience
     (function () {
       document.querySelectorAll("[data-copy]").forEach((btn) => {

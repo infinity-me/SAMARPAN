@@ -1,6 +1,8 @@
 // Backend/server.js
 require("dotenv").config();
 const Quiz = require("./models/Quiz");
+const RatingHistory = require("./models/RatingHistory");   
+const GameSession = require("./models/GameSession");       
 
 
 console.log("ENV CHECK → FRONTEND_URL:", process.env.FRONTEND_URL);
@@ -155,23 +157,127 @@ app.post("/api/quizzes", async (req, res) => {
         .json({ error: "title, authorId and at least 1 question required" });
     }
 
+    // 💡 authorId ko hamesha valid ObjectId banaao
+    let resolvedAuthorId = authorId;
+
+    // agar email aaya hai (eg. "abc@gmail.com")
+    if (typeof authorId === "string" && authorId.includes("@")) {
+      const user = await User.findOne({ email: authorId });
+      if (!user) {
+        return res.status(400).json({ error: "User not found for this authorId" });
+      }
+      resolvedAuthorId = user._id;
+    }
+
     const quiz = await Quiz.create({
       title,
-      topic,
-      author: authorId,               // 👈 ObjectId of User
-      questions,                      // 👈 must match questionSchema
+      topic: topic || "",
+      author: resolvedAuthorId,                   //hamesha ObjectId
+      questions,
       aiGenerated: !!aiGenerated || false,
       tags: tags || (topic ? [topic.toLowerCase()] : []),
     });
 
-    res.json({
+    return res.json({
       message: "Quiz created",
       quizId: quiz._id,
       quiz,
     });
   } catch (err) {
     console.error("Create quiz error:", err);
-    res.status(500).json({ error: "Failed to create quiz" });
+    return res.status(500).json({ error: "Failed to create quiz" });
+  }
+});
+
+// ====== START HOSTED GAME (simple prototype) ======
+app.post("/api/host/start", async (req, res) => {
+  try {
+    const { quizId, hostEmail, mode, timerSeconds, rated } = req.body;
+
+    if (!quizId || !hostEmail) {
+      return res.status(400).json({ error: "quizId and hostEmail required" });
+    }
+
+    const user = await User.findOne({ email: hostEmail });
+    if (!user) {
+      return res.status(400).json({ error: "Host user not found" });
+    }
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // simple random 6 digit PIN, try until unique
+    let pin;
+    let attempts = 0;
+    do {
+      pin = String(Math.floor(100000 + Math.random() * 900000));
+      const exists = await GameSession.findOne({ pin });
+      if (!exists) break;
+      attempts++;
+    } while (attempts < 5);
+
+    const game = await GameSession.create({
+      quiz: quiz._id,
+      host: user._id,
+      mode: mode || "rapid",
+      timerSeconds: timerSeconds || 30,
+      rated: rated !== false,
+      pin,
+    });
+
+    res.json({
+      message: "Game session created",
+      gameId: game._id,
+      pin: game.pin,
+    });
+  } catch (err) {
+    console.error("Host start error:", err);
+    res.status(500).json({ error: "Could not start game" });
+  }
+});
+
+
+// ====== GLOBAL LEADERBOARD (by globalRating) ======
+app.get("/leaderboard", async (req, res) => {
+  try {
+    const users = await User.find({})
+      .sort({ globalRating: -1 })
+      .limit(50)
+      .select("name globalRating xp");
+
+    const scores = users.map((u, idx) => ({
+      rank: idx + 1,
+      name: u.name,
+      score: u.globalRating,
+      xp: u.xp,
+    }));
+
+    res.json({ scores });
+  } catch (err) {
+    console.error("Leaderboard error:", err);
+    res.status(500).json({ error: "Failed to load leaderboard" });
+  }
+});
+
+// ====== RATING HISTORY BY EMAIL ======
+app.get("/ratings/:email", async (req, res) => {
+  try {
+    const email = req.params.email;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const history = await RatingHistory.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ history });
+  } catch (err) {
+    console.error("Rating history error:", err);
+    res.status(500).json({ error: "Failed to load rating history" });
   }
 });
 

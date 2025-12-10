@@ -1,27 +1,26 @@
+// models/GameSession.js
 const mongoose = require("mongoose");
-
-const participantSchema = new mongoose.Schema(
-  {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    name: String,
-    score: { type: Number, default: 0 },
-    ratingBefore: Number,
-    ratingAfter: Number,
-    delta: Number
-  },
-  { _id: false }
-);
 
 const gameSessionSchema = new mongoose.Schema(
   {
-    pin: { type: String, index: true },
-    quiz: { type: mongoose.Schema.Types.ObjectId, ref: "Quiz" },
-    host: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    mode: { type: String, enum: ["rapid", "blitz", "casual"], default: "rapid" },
+    quiz: { type: mongoose.Schema.Types.ObjectId, ref: "Quiz", required: true },
+    host: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+    mode: {
+      type: String,
+      enum: ["rapid", "blitz", "casual"],
+      default: "rapid",
+    },
+
+    timerSeconds: { type: Number, default: 30 },
     rated: { type: Boolean, default: true },
-    participants: [participantSchema],
-    startedAt: Date,
-    endedAt: Date
+
+    pin: { type: String, unique: true },
+    status: {
+      type: String,
+      enum: ["waiting", "running", "finished"],
+      default: "waiting",
+    },
   },
   { timestamps: true }
 );
