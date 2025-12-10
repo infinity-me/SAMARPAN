@@ -189,7 +189,12 @@
       console.warn("renderLastAIQuizToDashboard error:", e);
     }
   }
-
+function hideAuthView() {
+  const authView = document.getElementById("view-auth");
+  if (authView) {
+    authView.style.display = "none";   // ab sach me gayab karega
+  }
+}
   // ---------------- Attach event handlers ----------------
   function attachHandlers() {
     // Sidebar toggle (mobile)
@@ -228,130 +233,190 @@
       });
     })();
 
-    // Auth modal open/close and tabs
-    (function () {
-      const authOverlay = document.getElementById("authOverlay");
-      const authCloseBtn = document.getElementById("authCloseBtn");
-      const tabLogin = document.getElementById("tabLogin");
-      const tabSignup = document.getElementById("tabSignup");
-      const loginPanel = document.getElementById("loginPanel");
-      const signupPanel = document.getElementById("signupPanel");
-      const authTitle = document.getElementById("authTitle");
-      const authSubtitle = document.getElementById("authSubtitle");
-      const authStatus = document.getElementById("authStatus");
-      const authGoSignup = document.getElementById("authGoSignup");
+    // ================= AUTH CORE DOM REFS =================
+const authOverlay  = document.getElementById("authOverlay");
+const authCloseBtn = document.getElementById("authCloseBtn");
+const tabLogin     = document.getElementById("tabLogin");
+const tabSignup    = document.getElementById("tabSignup");
+const loginPanel   = document.getElementById("loginPanel");
+const signupPanel  = document.getElementById("signupPanel");
+const authTitle    = document.getElementById("authTitle");
+const authSubtitle = document.getElementById("authSubtitle");
+const authStatus   = document.getElementById("authStatus");
+const authGoSignup = document.getElementById("authGoSignup");
 
-      if (authCloseBtn) authCloseBtn.addEventListener("click", closeAuthModal);
-      if (authOverlay) {
-        authOverlay.addEventListener("click", (e) => { if (e.target === authOverlay) closeAuthModal(); });
-      }
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAuthModal(); });
+// Top triggers: Host / Login / Avatar
+const authTriggers = [
+  document.getElementById("btnHostTop"),
+  document.getElementById("btnAuthTop"),
+  document.getElementById("btnAvatarTop"),
+];
 
-      if (tabLogin && tabSignup && loginPanel && signupPanel) {
-        tabLogin.addEventListener("click", () => {
-          tabLogin.classList.add("auth-tab-active");
-          tabSignup.classList.remove("auth-tab-active");
-          loginPanel.style.display = "block";
-          signupPanel.style.display = "none";
-          if (authTitle) authTitle.textContent = "Log in";
-          if (authSubtitle) authSubtitle.textContent = "Sign in to continue using Samarpan.";
-          if (authStatus) authStatus.textContent = "";
-        });
+// ================= OPEN / CLOSE HELPERS =================
+function openAuthModal() {
+  if (!authOverlay) return;
+  authOverlay.classList.remove("hidden");
+  if (authStatus) {
+    authStatus.style.color = "#b91c1c";
+    authStatus.textContent = "";
+  }
+}
 
-        tabSignup.addEventListener("click", () => {
-          tabSignup.classList.add("auth-tab-active");
-          tabLogin.classList.remove("auth-tab-active");
-          loginPanel.style.display = "none";
-          signupPanel.style.display = "block";
-          if (authTitle) authTitle.textContent = "Create your Samarpan account";
-          if (authSubtitle) authSubtitle.textContent = "Tournaments, quizzes and rating in one place.";
-          if (authStatus) authStatus.textContent = "";
-        });
-      }
+function closeAuthModal() {
+  if (!authOverlay) return;
+  authOverlay.classList.add("hidden");
+}
 
-      if (authGoSignup && tabSignup) {
-        authGoSignup.addEventListener("click", (e) => { e.preventDefault(); tabSignup.click(); });
-      }
-    })();
+// Bind open on click (Host / Login / Avatar)
+authTriggers
+  .filter(Boolean)
+  .forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAuthModal();
+    });
+  });
 
-    // Signup
-    (function () {
-      const signupBtn = document.getElementById("signupSubmit");
-      const authStatus = document.getElementById("authStatus");
-      if (!signupBtn) return;
-      signupBtn.addEventListener("click", async () => {
-        const name     = document.getElementById("signupName")?.value.trim();
-        const email    = document.getElementById("signupEmail")?.value.trim();
-        const password = document.getElementById("signupPassword")?.value.trim();
+// Close (X button)
+if (authCloseBtn) {
+  authCloseBtn.addEventListener("click", closeAuthModal);
+}
 
-        if (!name || !email || !password) {
-          showStatusText(authStatus, "Please fill all fields.", "#b91c1c");
-          return;
-        }
-        showStatusText(authStatus, "Creating account...", "#4b5563");
+// Click outside to close
+if (authOverlay) {
+  authOverlay.addEventListener("click", (e) => {
+    if (e.target === authOverlay) {
+      closeAuthModal();
+    }
+  });
+}
 
-        try {
-          const res = await fetch(`${API_BASE}/api/signup`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }),
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            showStatusText(authStatus, data.error || "Signup failed.", "#b91c1c");
-            return;
-          }
-          showStatusText(authStatus, "Signup successful! You can log in now.", "#16a34a");
-          document.getElementById("tabLogin")?.click();
-        } catch (err) {
-          console.error("Signup error:", err);
-          showStatusText(authStatus, "Network error. Please try again.", "#b91c1c");
-        }
+// ESC key to close
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeAuthModal();
+  }
+});
+
+// ================= LOGIN <-> SIGNUP TABS =================
+if (tabLogin && tabSignup && loginPanel && signupPanel) {
+  tabLogin.addEventListener("click", () => {
+    tabLogin.classList.add("auth-tab-active");
+    tabSignup.classList.remove("auth-tab-active");
+    loginPanel.style.display  = "block";
+    signupPanel.style.display = "none";
+    if (authTitle)    authTitle.textContent    = "Log in";
+    if (authSubtitle) authSubtitle.textContent = "Sign in to continue using Samarpan.";
+    if (authStatus)   authStatus.textContent   = "";
+  });
+
+  tabSignup.addEventListener("click", () => {
+    tabSignup.classList.add("auth-tab-active");
+    tabLogin.classList.remove("auth-tab-active");
+    loginPanel.style.display  = "none";
+    signupPanel.style.display = "block";
+    if (authTitle)    authTitle.textContent    = "Create your Samarpan account";
+    if (authSubtitle) authSubtitle.textContent = "Tournaments, quizzes and rating in one place.";
+    if (authStatus)   authStatus.textContent   = "";
+  });
+}
+
+// Bottom text: "Don’t have an account? Sign up"
+if (authGoSignup && tabSignup) {
+  authGoSignup.addEventListener("click", (e) => {
+    e.preventDefault();
+    tabSignup.click();
+  });
+}
+
+// Small helper for status text
+function showStatusText(el, text, color) {
+  if (!el) return;
+  el.style.color = color || "#e5e7eb";
+  el.textContent = text || "";
+}
+
+// ================= SIGNUP REQUEST =================
+(function () {
+  const signupBtn = document.getElementById("signupSubmit");
+  if (!signupBtn) return;
+
+  signupBtn.addEventListener("click", async () => {
+    const name     = document.getElementById("signupName")?.value.trim();
+    const email    = document.getElementById("signupEmail")?.value.trim();
+    const password = document.getElementById("signupPassword")?.value.trim();
+
+    if (!name || !email || !password) {
+      showStatusText(authStatus, "Please fill all fields.", "#b91c1c");
+      return;
+    }
+    showStatusText(authStatus, "Creating account...", "#4b5563");
+
+    try {
+      const res = await fetch(`${API_BASE}/api/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
       });
-    })();
+      const data = await res.json();
+      if (!res.ok) {
+        showStatusText(authStatus, data.error || "Signup failed.", "#b91c1c");
+        return;
+      }
+      showStatusText(authStatus, "Signup successful! You can log in now.", "#16a34a");
+      tabLogin?.click();
+    } catch (err) {
+      console.error("Signup error:", err);
+      showStatusText(authStatus, "Network error. Please try again.", "#b91c1c");
+    }
+  });
+})();
 
-    // Login
-    (function () {
-      const loginBtn = document.getElementById("loginSubmit");
-      const authStatus = document.getElementById("authStatus");
-      if (!loginBtn) return;
-      loginBtn.addEventListener("click", async () => {
-        const email = document.getElementById("loginEmail")?.value.trim();
-        const password = document.getElementById("loginPassword")?.value.trim();
-        if (!email || !password) {
-          showStatusText(authStatus, "Enter email and password.", "#b91c1c");
-          return;
-        }
-        showStatusText(authStatus, "Logging in...", "#4b5563");
+// ================= LOGIN REQUEST =================
+(function () {
+  const loginBtn = document.getElementById("loginSubmit");
+  if (!loginBtn) return;
 
-        try {
-          const res = await fetch(`${API_BASE}/api/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            showStatusText(authStatus, data.error || "Login failed.", "#b91c1c");
-            return;
-          }
-          showStatusText(authStatus, "Login successful!", "#16a34a");
+  loginBtn.addEventListener("click", async () => {
+    const email    = document.getElementById("loginEmail")?.value.trim();
+    const password = document.getElementById("loginPassword")?.value.trim();
 
-          setCurrentUser(data);
-          updateUIOnLogin(data);
+    if (!email || !password) {
+      showStatusText(authStatus, "Enter email and password.", "#b91c1c");
+      return;
+    }
+    showStatusText(authStatus, "Logging in...", "#4b5563");
 
-          const profileName  = document.getElementById("profileName");
-          const profileEmail = document.getElementById("profileEmail");
-          if (profileName && data.name) profileName.textContent = data.name;
-          if (profileEmail && data.email) profileEmail.textContent = data.email;
-
-          setTimeout(closeAuthModal, 700);
-        } catch (err) {
-          console.error("Login error:", err);
-          showStatusText(authStatus, "Network error. Please try again.", "#b91c1c");
-        }
+    try {
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-    })();
+
+      const data = await res.json();
+      if (!res.ok) {
+        showStatusText(authStatus, data.error || "Login failed.", "#b91c1c");
+        return;
+      }
+
+      // SUCCESS
+      showStatusText(authStatus, "Login successful!", "#16a34a");
+
+      // Save + UI update
+      localStorage.setItem("samarpanUser", JSON.stringify(data));
+      updateUIOnLogin(data);
+      hideAuthView();   // agar view-auth page hai to usko bhi hide kar do
+
+      setTimeout(() => {
+        closeAuthModal();
+      }, 700);
+    } catch (err) {
+      console.error("Login error:", err);
+      showStatusText(authStatus, "Network error. Please try again.", "#b91c1c");
+    }
+  });
+})();
 
     // Social login buttons
     (function () {
@@ -583,14 +648,21 @@
     })();
   } // end attachHandlers
 
+
   // ---------------- Initialization ----------------
   onReady(() => {
     // Apply token if present in URL (SSO redirects)
     handleTokenInURL();
 
     // Hydrate UI if user already logged in
-    const existing = getCurrentUser();
-    if (existing) updateUIOnLogin(existing);
+    document.addEventListener("DOMContentLoaded", () => {
+  const existing = getCurrentUser();
+  if (existing) {
+    updateUIOnLogin(existing);
+  }
+});
+
+
 
     // Attach all event handlers
     attachHandlers();
