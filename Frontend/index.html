@@ -7,9 +7,8 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
- 
   <div class="app">
-    <!-- ========== SIDEBAR ========== -->
+    <!-- ===== SIDEBAR (LEFT PANEL) ===== -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="brand">
@@ -21,6 +20,7 @@
         </button>
       </div>
 
+      <!-- Logged-in user mini card -->
       <div class="user-box">
         <div class="user-avatar">A</div>
         <div class="user-meta">
@@ -29,6 +29,7 @@
         </div>
       </div>
 
+      <!-- Main navigation links -->
       <nav class="side-nav">
         <button class="side-link" data-view="dashboard">
           <span>Dashboard</span>
@@ -46,20 +47,19 @@
           <span>Explore</span>
           <div class="shockwave"></div>
         </button>
-                <button class="side-link" data-view="battles">
+        <button class="side-link" data-view="battles">
           <span>Battles</span>
           <div class="shockwave"></div>
         </button>
-
       </nav>
     </aside>
 
-    <!-- ========== MAIN AREA ========== -->
+    <!-- ===== MAIN CONTENT AREA ===== -->
     <main class="main">
-      <!-- tab change flash line -->
+      <!-- Flash line shown when switching tabs -->
       <div class="switch-flash" id="switchFlash"></div>
 
-      <!-- TOP BAR -->
+      <!-- Top bar with links and profile -->
       <header class="topbar">
         <div class="top-links">
           <button class="top-link" data-view="contact">
@@ -71,50 +71,134 @@
             <div class="shockwave"></div>
           </button>
         </div>
+
         <div class="top-actions">
           <button class="top-btn" data-view="host" id="btnHostTop">
             Host quiz
             <div class="shockwave"></div>
           </button>
-          <button class="top-btn top-btn-ghost" data-view="auth" id="btnAuthTop">
+
+          <button
+            class="top-btn top-btn-ghost"
+            data-view="auth"
+            id="btnAuthTop"
+          >
             Sign up / Log in
             <div class="shockwave"></div>
           </button>
+
           <div class="top-profile" data-view="profile" id="btnAvatarTop">
             A
             <div class="shockwave"></div>
           </div>
+
           <button
-      class="top-btn top-btn-ghost"
-      id="btnLogout"
-      style="display: none;"
-    >
-      Logout
-    </button>
+            class="top-btn top-btn-ghost"
+            id="btnLogout"
+            style="display: none;"
+          >
+            Logout
+          </button>
         </div>
       </header>
 
-      <!-- LATEST UPDATES STRIP -->
+      <!-- Latest announcements / updates -->
       <section class="updates-strip">
         <h2>Latest updates</h2>
         <div class="updates-items">
           <span>🔥 New: AI quiz generator added for PDFs</span>
           <span>🏆 Live coding tournament scheduled for Friday</span>
-          <span>✨ Dynamic rating & ranking system now live</span>
+          <span>✨ Dynamic rating &amp; ranking system now live</span>
         </div>
       </section>
 
-      <!-- ========= VIEWS ========= -->
+      <!-- =====================================
+           VIEWS (SINGLE-PAGE APP SECTIONS)
+           ===================================== -->
 
-      <!-- DASHBOARD VIEW (HOME) -->
+      <!-- ===== DASHBOARD VIEW (HOME) ===== -->
       <section class="view view-active" id="view-dashboard">
         <div class="view-header">
           <h2>Dashboard</h2>
           <p>Your quick overview of tools, recent quizzes, rating and activity.</p>
         </div>
 
+        <!-- Hero section with tagline + profile card -->
+        <section class="dash-hero">
+          <!-- LEFT: main hero text -->
+          <div class="dash-hero-left">
+            <p class="dash-pill">Samarpan Arena</p>
+            <h1 class="dash-hero-title">
+              Host. Compete. <span>Rank up.</span>
+            </h1>
+            <p class="dash-hero-sub">
+              Turn your classroom into an e-sports style arena. Create quizzes,
+              host live battles and watch players climb the leaderboard.
+            </p>
+
+            <div class="dash-hero-actions">
+              <button class="btn btn-primary" data-view="host">
+                Start a battle
+              </button>
+              <button class="btn btn-outline" data-view="create">
+                Create new quiz
+              </button>
+            </div>
+
+            <div class="dash-hero-mini">
+              <div>
+                <span class="dash-mini-label">Quizzes hosted</span>
+                <span class="dash-mini-value">42</span>
+              </div>
+              <div>
+                <span class="dash-mini-label">Players joined</span>
+                <span class="dash-mini-value">196</span>
+              </div>
+              <div>
+                <span class="dash-mini-label">Best streak</span>
+                <span class="dash-mini-value">+87 rating</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: floating profile summary card -->
+          <div class="dash-hero-right">
+            <div class="dash-hero-card">
+              <div class="dash-hero-tag">Host profile</div>
+
+              <div class="dash-hero-avatar" id="dashHeroAvatar">
+                A
+              </div>
+
+              <div class="dash-hero-rating-row">
+                <div>
+                  <p class="dash-hero-stat-label">Global rating</p>
+                  <p class="dash-hero-stat-value">1430</p>
+                </div>
+                <div>
+                  <p class="dash-hero-stat-label">Games hosted</p>
+                  <p class="dash-hero-stat-value">42</p>
+                </div>
+              </div>
+
+              <div class="dash-hero-progress">
+                <div class="dash-hero-progress-bar">
+                  <div class="dash-hero-progress-fill"></div>
+                </div>
+                <p class="dash-hero-progress-text">
+                  Next tier: <span>Pro Host</span>
+                </p>
+              </div>
+
+              <p class="dash-hero-foot">
+                Tip: Use <strong>AI quizzes</strong> for fast tournament setups.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <div class="dashboard-grid">
-          <!-- LEFT: TOOLBAR -->
+          <!-- LEFT: quick tools panel -->
           <div class="card toolbar-card">
             <h3>Toolbar</h3>
             <ul class="toolbar-list">
@@ -139,7 +223,7 @@
             </ul>
           </div>
 
-          <!-- RIGHT: QUIZ CARDS + RATING SUMMARY -->
+          <!-- RIGHT: recent quizzes + mini rating summary -->
           <div class="card history-card">
             <div class="history-head">
               <h3>Your quizzes / history</h3>
@@ -184,7 +268,7 @@
               </div>
             </div>
 
-            <!-- small rating summary inside dashboard -->
+            <!-- Inline rating block inside dashboard -->
             <div class="inline-rating">
               <div>
                 <span class="inline-label">Current rating</span>
@@ -198,7 +282,7 @@
           </div>
         </div>
 
-        <!-- extra: stats row -->
+        <!-- Key stats row -->
         <div class="stats-row">
           <div class="card stat-card">
             <h4>Total quizzes hosted</h4>
@@ -217,7 +301,7 @@
           </div>
         </div>
 
-        <!-- extra: recent activity list -->
+        <!-- Recent activity list -->
         <div class="card activity-card">
           <div class="activity-head">
             <h3>Recent activity</h3>
@@ -243,7 +327,7 @@
         </div>
       </section>
 
-      <!-- CREATE QUIZ VIEW -->
+      <!-- ===== CREATE QUIZ VIEW ===== -->
       <section class="view" id="view-create">
         <div class="view-header">
           <h2>Create quiz</h2>
@@ -251,6 +335,7 @@
         </div>
 
         <div class="grid-two">
+          <!-- Manual quiz creation -->
           <div class="card create-card">
             <h3>Start from scratch</h3>
             <p>
@@ -267,6 +352,7 @@
             </button>
           </div>
 
+          <!-- AI quiz creation -->
           <div class="card create-card">
             <h3>Create using AI</h3>
             <p>
@@ -284,7 +370,11 @@
             </div>
             <div class="field">
               <label for="aiTitle">Quiz title (optional)</label>
-              <input type="text" id="aiTitle" placeholder="Eg. DBMS Normalization - Quiz 1" />
+              <input
+                type="text"
+                id="aiTitle"
+                placeholder="Eg. DBMS Normalization - Quiz 1"
+              />
             </div>
             <div class="field inline-field">
               <div>
@@ -300,27 +390,27 @@
                 <input type="number" id="aiCount" value="5" min="1" max="50" />
               </div>
             </div>
+
             <div class="ai-actions">
-  <button class="btn btn-outline" id="aiGenerateBtn">
-    Create using AI
-  </button>
+              <button class="btn btn-outline" id="aiGenerateBtn">
+                Create using AI
+              </button>
 
-  <!-- Naya play button – by default hidden -->
-  <button
-    class="btn btn-outline"
-    id="aiPlayBtn"
-    style="display:none;"
-  >
-    Play this quiz
-  </button>
-</div>
+              <!-- Shown after AI quiz is ready -->
+              <button
+                class="btn btn-outline"
+                id="aiPlayBtn"
+                style="display:none;"
+              >
+                Play this quiz
+              </button>
+            </div>
 
-<p id="aiStatus" class="form-note"></p>
-
+            <p id="aiStatus" class="form-note"></p>
           </div>
         </div>
 
-        <!-- extra templates row -->
+        <!-- Quick pre-made templates -->
         <div class="templates-row">
           <h3 class="section-subtitle">Quick templates</h3>
           <div class="templates-grid">
@@ -342,7 +432,7 @@
           </div>
         </div>
 
-        <!-- extra tips box -->
+        <!-- Extra tips section -->
         <div class="card tips-card">
           <h3>Tips for better quizzes</h3>
           <ul class="small-list">
@@ -354,89 +444,123 @@
         </div>
       </section>
 
+      <!-- ===== MANUAL QUIZ EDITOR (inside create view) ===== -->
+      <div
+        class="card manual-editor"
+        id="manualEditor"
+        style="display:none; margin-top:1.5rem;"
+      >
+        <h3>Manual quiz editor</h3>
+        <p style="color:#9ca3af; font-size:0.9rem;">
+          Add questions manually, options, correct answer and explanation.
+        </p>
 
+        <!-- Quiz-level details -->
+        <div class="field">
+          <label for="manualTitle">Quiz title</label>
+          <input
+            type="text"
+            id="manualTitle"
+            placeholder="Eg. DBMS Basics - Set 1"
+          />
+        </div>
 
+        <div class="field">
+          <label for="manualTopic">Topic / tag</label>
+          <input
+            type="text"
+            id="manualTopic"
+            placeholder="Eg. DBMS, Normalization"
+          />
+        </div>
 
-      <!-- ========== MANUAL QUIZ EDITOR ========== -->
-<div class="card manual-editor" id="manualEditor" style="display:none; margin-top:1.5rem;">
-  <h3>Manual quiz editor</h3>
-  <p style="color:#9ca3af; font-size:0.9rem;">
-    Add questions manually, options, correct answer and explanation.
-  </p>
+        <div class="field">
+          <label for="manualDifficulty">Default difficulty</label>
+          <select id="manualDifficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
 
-  <!-- Quiz level details -->
-  <div class="field">
-    <label for="manualTitle">Quiz title</label>
-    <input type="text" id="manualTitle" placeholder="Eg. DBMS Basics - Set 1" />
-  </div>
+        <hr style="border-color:#1f2937; margin:1rem 0;" />
 
-  <div class="field">
-    <label for="manualTopic">Topic / tag</label>
-    <input type="text" id="manualTopic" placeholder="Eg. DBMS, Normalization" />
-  </div>
+        <!-- Question form -->
+        <h4 style="margin:0 0 .5rem;">Add a question</h4>
 
-  <div class="field">
-    <label for="manualDifficulty">Default difficulty</label>
-    <select id="manualDifficulty">
-      <option value="easy">Easy</option>
-      <option value="medium" selected>Medium</option>
-      <option value="hard">Hard</option>
-    </select>
-  </div>
+        <div class="field">
+          <label for="qText">Question</label>
+          <textarea
+            id="qText"
+            rows="2"
+            placeholder="Type your question here..."
+          ></textarea>
+        </div>
 
-  <hr style="border-color:#1f2937; margin:1rem 0;" />
+        <div class="field">
+          <label>Options</label>
+          <input type="text" id="opt0" placeholder="Option 1" />
+          <input
+            type="text"
+            id="opt1"
+            placeholder="Option 2"
+            style="margin-top:0.35rem;"
+          />
+          <input
+            type="text"
+            id="opt2"
+            placeholder="Option 3 (optional)"
+            style="margin-top:0.35rem;"
+          />
+          <input
+            type="text"
+            id="opt3"
+            placeholder="Option 4 (optional)"
+            style="margin-top:0.35rem;"
+          />
+        </div>
 
-  <!-- Question form -->
-  <h4 style="margin:0 0 .5rem;">Add a question</h4>
+        <div class="field">
+          <label for="correctIndex">Correct option</label>
+          <select id="correctIndex">
+            <option value="0">Option 1</option>
+            <option value="1">Option 2</option>
+            <option value="2">Option 3</option>
+            <option value="3">Option 4</option>
+          </select>
+        </div>
 
-  <div class="field">
-    <label for="qText">Question</label>
-    <textarea id="qText" rows="2" placeholder="Type your question here..."></textarea>
-  </div>
+        <div class="field">
+          <label for="qExplanation">Explanation (optional)</label>
+          <textarea
+            id="qExplanation"
+            rows="2"
+            placeholder="Short explanation for this answer..."
+          ></textarea>
+        </div>
 
-  <div class="field">
-    <label>Options</label>
-    <input type="text" id="opt0" placeholder="Option 1" />
-    <input type="text" id="opt1" placeholder="Option 2" style="margin-top:0.35rem;" />
-    <input type="text" id="opt2" placeholder="Option 3 (optional)" style="margin-top:0.35rem;" />
-    <input type="text" id="opt3" placeholder="Option 4 (optional)" style="margin-top:0.35rem;" />
-  </div>
+        <button class="btn btn-outline" id="btnAddQuestion" type="button">
+          + Add question to quiz
+        </button>
 
-  <div class="field">
-    <label for="correctIndex">Correct option</label>
-    <select id="correctIndex">
-      <option value="0">Option 1</option>
-      <option value="1">Option 2</option>
-      <option value="2">Option 3</option>
-      <option value="3">Option 4</option>
-    </select>
-  </div>
+        <!-- List of questions added so far -->
+        <div
+          id="manualQuestionList"
+          style="margin-top:1rem; font-size:0.85rem; color:#e5e7eb;"
+        >
+          <p style="margin:0; color:#9ca3af;">No questions added yet.</p>
+        </div>
 
-  <div class="field">
-    <label for="qExplanation">Explanation (optional)</label>
-    <textarea id="qExplanation" rows="2" placeholder="Short explanation for this answer..."></textarea>
-  </div>
+        <hr style="border-color:#1f2937; margin:1.2rem 0;" />
 
-  <button class="btn btn-outline" id="btnAddQuestion" type="button">
-    + Add question to quiz
-  </button>
+        <button class="btn btn-primary" id="btnSaveManualQuiz" type="button">
+          Save quiz to Samarpan
+        </button>
 
-  <!-- Current questions list -->
-  <div id="manualQuestionList" style="margin-top:1rem; font-size:0.85rem; color:#e5e7eb;">
-    <p style="margin:0; color:#9ca3af;">No questions added yet.</p>
-  </div>
+        <p id="manualEditorStatus" style="margin-top:.7rem; font-size:0.8rem;"></p>
+      </div>
 
-  <hr style="border-color:#1f2937; margin:1.2rem 0;" />
-
-  <button class="btn btn-primary" id="btnSaveManualQuiz" type="button">
-    Save quiz to Samarpan
-  </button>
-
-  <p id="manualEditorStatus" style="margin-top:.7rem; font-size:0.8rem;"></p>
-</div>
-
-
-      <!-- ========== QUIZ PLAYER VIEW (simple) ========== -->
+      <!-- ===== QUIZ PLAYER VIEW ===== -->
       <section class="view" id="view-player">
         <div class="view-header">
           <h2 id="playerTitle">Quiz player</h2>
@@ -452,7 +576,7 @@
           <h3 id="playerQuestionText">Question will appear here</h3>
 
           <div id="playerOptions" class="player-options">
-            <!-- options as buttons -->
+            <!-- Answer options will be injected by JS -->
           </div>
 
           <p id="playerStatus" class="player-status"></p>
@@ -462,17 +586,25 @@
           </button>
         </div>
 
-        <div class="card" id="playerResult" style="display:none; margin-top:1rem;">
+        <div
+          class="card"
+          id="playerResult"
+          style="display:none; margin-top:1rem;"
+        >
           <h3>Quiz finished</h3>
           <p id="playerScoreLine"></p>
           <p id="playerTimeLine"></p>
-          <button class="btn btn-outline" id="playerBackDashboard" type="button">
+          <button
+            class="btn btn-outline"
+            id="playerBackDashboard"
+            type="button"
+          >
             Back to dashboard
           </button>
         </div>
       </section>
 
-      <!-- LEADERBOARD VIEW -->
+      <!-- ===== LEADERBOARD VIEW ===== -->
       <section class="view" id="view-leaderboard">
         <div class="view-header">
           <h2>Leaderboard &amp; ratings</h2>
@@ -498,12 +630,12 @@
               </tr>
             </thead>
             <tbody id="leaderboardBody">
-              <!-- rows JS se aayenge -->
+              <!-- Leaderboard rows will be filled by JS -->
             </tbody>
           </table>
         </div>
 
-        <!-- rating explanation row -->
+        <!-- Extra explanation cards -->
         <div class="leaderboard-extra">
           <div class="card lb-card">
             <h3>How ratings work (chess-style)</h3>
@@ -535,7 +667,7 @@
         </div>
       </section>
 
-      <!-- EXPLORE VIEW -->
+      <!-- ===== EXPLORE VIEW ===== -->
       <section class="view" id="view-explore">
         <div class="view-header">
           <h2>Explore quizzes &amp; tournaments</h2>
@@ -546,26 +678,26 @@
           <div class="card explore-card">
             <h3>Trending quizzes</h3>
             <ul class="small-list" id="trendingQuizzes">
-              <!-- JS se populate hoga -->
+              <!-- Filled by JS with sample quizzes -->
             </ul>
           </div>
 
           <div class="card explore-card">
             <h3>Upcoming tournaments</h3>
             <ul class="small-list" id="upcomingTournaments">
-              <!-- JS se populate hoga -->
+              <!-- Filled by JS with tournaments -->
             </ul>
           </div>
 
           <div class="card explore-card">
             <h3>Learn &amp; improve</h3>
             <ul class="small-list" id="learnImprove">
-              <!-- JS se populate hoga -->
+              <!-- Filled by JS with learning items -->
             </ul>
           </div>
         </div>
 
-        <!-- categories row -->
+        <!-- Category-based browse block -->
         <div class="categories-block">
           <h3 class="section-subtitle">Browse by category</h3>
           <div class="category-chips">
@@ -577,7 +709,7 @@
           </div>
 
           <div class="category-grid" id="exploreCategories">
-            <!-- category cards JS se aayenge (abhi static rakh sakte ho) -->
+            <!-- Example static category cards -->
             <div class="card cat-card">
               <h4>Beginner CS Pack</h4>
               <p>3 quizzes • C basics, loops, arrays.</p>
@@ -594,8 +726,7 @@
         </div>
       </section>
 
-
-      <!-- PROFILE VIEW -->
+      <!-- ===== PROFILE VIEW ===== -->
       <section class="view" id="view-profile">
         <div class="view-header">
           <h2>Profile &amp; rating</h2>
@@ -603,13 +734,15 @@
         </div>
 
         <div class="profile-grid">
+          <!-- Main profile info -->
           <div class="card profile-main">
             <div class="profile-header">
               <div class="profile-avatar" id="profileAvatar">U</div>
               <div>
                 <h3 id="profileName">User</h3>
-                <p class="profile-sub" id="profileRole">Host • Team Samarpan</p>
-
+                <p class="profile-sub" id="profileRole">
+                  Host • Team Samarpan
+                </p>
               </div>
             </div>
 
@@ -632,7 +765,9 @@
             </div>
 
             <div class="rating-bar-wrapper">
-              <span class="rating-label">Progress to next tier (Gold → Platinum)</span>
+              <span class="rating-label">
+                Progress to next tier (Gold → Platinum)
+              </span>
               <div class="rating-progress">
                 <div class="rating-progress-fill"></div>
               </div>
@@ -642,6 +777,7 @@
             </div>
           </div>
 
+          <!-- Mode-wise ratings -->
           <div class="card profile-modes">
             <h3>Mode-wise ratings</h3>
             <div class="mode-list">
@@ -669,6 +805,7 @@
             </div>
           </div>
 
+          <!-- Recent rated game history -->
           <div class="card profile-history">
             <h3>Recent rated quizzes</h3>
             <ul class="history-list">
@@ -692,7 +829,7 @@
         </div>
       </section>
 
-      <!-- HOST VIEW -->
+      <!-- ===== HOST VIEW ===== -->
       <section class="view" id="view-host">
         <div class="view-header">
           <h2>Host a quiz</h2>
@@ -700,6 +837,7 @@
         </div>
 
         <div class="host-grid">
+          <!-- Host form -->
           <div class="card host-form">
             <div class="field">
               <label for="host-quiz">Select quiz</label>
@@ -735,7 +873,7 @@
             </div>
 
             <button class="btn btn-primary full-width" id="btnHostStart">
-             Generate game PIN &amp; start
+              Generate game PIN &amp; start
             </button>
             <p id="hostStatus" class="form-note"></p>
 
@@ -745,6 +883,7 @@
             </p>
           </div>
 
+          <!-- Host info / rating impact -->
           <div class="card host-side">
             <h3>Expected rating impact</h3>
             <ul class="small-list">
@@ -761,7 +900,7 @@
         </div>
       </section>
 
-            <!-- BATTLES VIEW -->
+      <!-- ===== BATTLES VIEW ===== -->
       <section class="view" id="view-battles">
         <div class="view-header">
           <h2>Team battles (2v2 &amp; 4v4)</h2>
@@ -769,7 +908,7 @@
         </div>
 
         <div class="host-grid">
-          <!-- LEFT: CREATE BATTLE -->
+          <!-- LEFT: create a new battle -->
           <div class="card host-form">
             <h3>Create battle</h3>
 
@@ -808,14 +947,18 @@
               Generate battle PIN
             </button>
 
-            <button class="btn btn-outline full-width" id="btnBattlePlayLocal" style="margin-top:0.5rem;">
+            <button
+              class="btn btn-outline full-width"
+              id="btnBattlePlayLocal"
+              style="margin-top:0.5rem;"
+            >
               Start local battle on this device
             </button>
 
             <p id="battleStatus" class="form-note"></p>
           </div>
 
-          <!-- RIGHT: JOIN BATTLE -->
+          <!-- RIGHT: join existing battle -->
           <div class="card host-side">
             <h3>Join a battle (prototype)</h3>
 
@@ -849,8 +992,7 @@
         </div>
       </section>
 
-
-      <!-- AUTH VIEW (PAGE) -->
+      <!-- ===== AUTH VIEW (FULL PAGE) ===== -->
       <section class="view" id="view-auth">
         <div class="view-header">
           <h2>Sign up / Log in</h2>
@@ -858,6 +1000,7 @@
         </div>
 
         <div class="auth-grid">
+          <!-- Login card -->
           <form class="card auth-card">
             <h3>Log in</h3>
             <div class="field">
@@ -882,6 +1025,7 @@
             <p class="form-note">Static mockup page for now.</p>
           </form>
 
+          <!-- Signup card -->
           <form class="card auth-card">
             <h3>Sign up</h3>
             <div class="field">
@@ -918,7 +1062,7 @@
         </div>
       </section>
 
-      <!-- CONTACT VIEW -->
+      <!-- ===== CONTACT VIEW ===== -->
       <section class="view" id="view-contact">
         <div class="view-header">
           <h2>Contact us</h2>
@@ -926,6 +1070,7 @@
         </div>
 
         <div class="contact-grid">
+          <!-- Contact form -->
           <form class="card contact-form">
             <div class="field">
               <label for="c-name">Name</label>
@@ -962,6 +1107,7 @@
             <p class="form-note">Prototype form – data is not actually sent.</p>
           </form>
 
+          <!-- Contact info / description -->
           <div class="card contact-info">
             <h3>Team Samarpan</h3>
             <p class="contact-text">
@@ -977,7 +1123,7 @@
         </div>
       </section>
 
-      <!-- ABOUT VIEW -->
+      <!-- ===== ABOUT VIEW ===== -->
       <section class="view" id="view-about">
         <div class="view-header">
           <h2>About Samarpan</h2>
@@ -988,6 +1134,7 @@
         </div>
 
         <div class="about-grid">
+          <!-- Project overview -->
           <div class="card about-card">
             <h3>Project overview</h3>
             <p class="about-text">
@@ -1002,6 +1149,7 @@
             </ul>
           </div>
 
+          <!-- Tech stack -->
           <div class="card about-card">
             <h3>Tech stack</h3>
             <ul class="small-list">
@@ -1015,6 +1163,7 @@
             </ul>
           </div>
 
+          <!-- Team members -->
           <div class="card about-card">
             <h3>Team Samarpan</h3>
             <ul class="small-list">
@@ -1031,101 +1180,123 @@
     </main>
   </div>
 
-  <!-- ============ AUTH MODAL (LOGIN / SIGNUP) ============ -->
-<div class="auth-overlay hidden" id="authOverlay">
-  <div class="auth-modal auth-kahoot-card">
-    <button class="auth-close" id="authCloseBtn">&times;</button>
+  <!-- =========================================
+       AUTH MODAL (POPUP LOGIN / SIGNUP)
+       ========================================= -->
+  <div class="auth-overlay hidden" id="authOverlay">
+    <div class="auth-modal auth-kahoot-card">
+      <button class="auth-close" id="authCloseBtn">&times;</button>
 
-    <h2 class="auth-main-title" id="authTitle">Log in</h2>
-    <p class="auth-main-sub" id="authSubtitle">
-      Sign in to continue using Samarpan.
-    </p>
+      <h2 class="auth-main-title" id="authTitle">Log in</h2>
+      <p class="auth-main-sub" id="authSubtitle">
+        Sign in to continue using Samarpan.
+      </p>
 
-    <!-- Social providers row -->
-    <div class="auth-social-row auth-social-row-top">
-  <button class="auth-social-pill" type="button" id="socialGoogle" onclick="window.location.href='http://localhost:5000/auth/google'">
-    <span class="auth-social-icon" >G</span>
-    <span>Continue with Google</span>
-  </button>
-  <button class="auth-social-pill" type="button" id="socialFacebook" onclick="window.location.href='http://localhost:5000/auth/facebook'">
-    <span class="auth-social-icon">f</span>
-    <span>Continue with Facebook</span>
-  </button>
-</div>
-
-
-    <div class="auth-or-divider"><span>or</span></div>
-
-    <!-- Small inline tabs like Kahoot -->
-    <div class="auth-tabs auth-tabs-inline">
-      <button class="auth-tab auth-tab-active" id="tabLogin">
-        Login with email
-      </button>
-      <button class="auth-tab" id="tabSignup">
-        Create new account
-      </button>
-    </div>
-
-    <!-- LOGIN FORM -->
-    <div id="loginPanel">
-      <div class="auth-field">
-        <label for="loginEmail">Username or email</label>
-        <input id="loginEmail" type="email" placeholder="you@example.com">
+      <!-- Social login buttons -->
+      <div class="auth-social-row auth-social-row-top">
+        <button
+          class="auth-social-pill"
+          type="button"
+          id="socialGoogle"
+          onclick="window.location.href='http://localhost:5000/auth/google'"
+        >
+          <span class="auth-social-icon">G</span>
+          <span>Continue with Google</span>
+        </button>
+        <button
+          class="auth-social-pill"
+          type="button"
+          id="socialFacebook"
+          onclick="window.location.href='http://localhost:5000/auth/facebook'"
+        >
+          <span class="auth-social-icon">f</span>
+          <span>Continue with Facebook</span>
+        </button>
       </div>
-      <div class="auth-field">
-        <label for="loginPassword">Password</label>
-        <div class="auth-password-wrapper">
-          <input id="loginPassword" type="password" placeholder="••••••••">
-          <!-- sirf UI, koi real eye toggle nahi abhi -->
-          <span class="auth-eye-icon">👁</span>
+
+      <div class="auth-or-divider"><span>or</span></div>
+
+      <!-- Small inline tabs for login / signup -->
+      <div class="auth-tabs auth-tabs-inline">
+        <button class="auth-tab auth-tab-active" id="tabLogin">
+          Login with email
+        </button>
+        <button class="auth-tab" id="tabSignup">
+          Create new account
+        </button>
+      </div>
+
+      <!-- LOGIN PANEL (inside modal) -->
+      <div id="loginPanel">
+        <div class="auth-field">
+          <label for="loginEmail">Username or email</label>
+          <input id="loginEmail" type="email" placeholder="you@example.com" />
         </div>
+        <div class="auth-field">
+          <label for="loginPassword">Password</label>
+          <div class="auth-password-wrapper">
+            <input
+              id="loginPassword"
+              type="password"
+              placeholder="••••••••"
+            />
+            <!-- Just visual icon for now, no toggle logic yet -->
+            <span class="auth-eye-icon">👁</span>
+          </div>
+        </div>
+
+        <div class="auth-row-between">
+          <a href="#" class="auth-link-small">Forgot password?</a>
+        </div>
+
+        <button class="auth-primary-btn" id="loginSubmit" type="button">
+          Log in
+        </button>
       </div>
 
-      <div class="auth-row-between">
-        <a href="#" class="auth-link-small">Forgot password?</a>
+      <!-- SIGNUP PANEL (inside modal) -->
+      <div id="signupPanel" style="display:none;">
+        <div class="auth-field">
+          <label for="signupName">Name</label>
+          <input id="signupName" type="text" placeholder="Your full name" />
+        </div>
+        <div class="auth-field">
+          <label for="signupEmail">Email</label>
+          <input id="signupEmail" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="auth-field">
+          <label for="signupPassword">Password</label>
+          <input
+            id="signupPassword"
+            type="password"
+            placeholder="Create a password"
+          />
+        </div>
+
+        <button class="auth-primary-btn" id="signupSubmit" type="button">
+          Sign up
+        </button>
       </div>
 
-      <button class="auth-primary-btn" id="loginSubmit" type="button">
-        Log in
-      </button>
+      <!-- Bottom text and legal -->
+      <div class="auth-bottom-text">
+        <span>Don’t have an account?</span>
+        <button type="button" class="auth-link-button" id="authGoSignup">
+          Sign up
+        </button>
+      </div>
+
+      <p class="auth-legal">
+        By signing up, you accept our
+        <span>Terms and Conditions</span>
+        and
+        <span>Privacy Policy</span>.
+      </p>
+
+      <p id="authStatus" class="auth-status"></p>
     </div>
-
-    <!-- SIGNUP FORM -->
-    <div id="signupPanel" style="display:none;">
-      <div class="auth-field">
-        <label for="signupName">Name</label>
-        <input id="signupName" type="text" placeholder="Your full name">
-      </div>
-      <div class="auth-field">
-        <label for="signupEmail">Email</label>
-        <input id="signupEmail" type="email" placeholder="you@example.com">
-      </div>
-      <div class="auth-field">
-        <label for="signupPassword">Password</label>
-        <input id="signupPassword" type="password" placeholder="Create a password">
-      </div>
-
-      <button class="auth-primary-btn" id="signupSubmit" type="button">
-        Sign up
-      </button>
-    </div>
-
-    <div class="auth-bottom-text">
-      <span>Don’t have an account?</span>
-      <button type="button" class="auth-link-button" id="authGoSignup">
-        Sign up
-      </button>
-    </div>
-
-    <p class="auth-legal">
-      By signing up, you accept our <span>Terms and Conditions</span>
-      and <span>Privacy Policy</span>.
-    </p>
-
-    <p id="authStatus" class="auth-status"></p>
   </div>
-</div>
-<script src="script.js"></script>
-<!-- ===================================================== -->
+
+  <script src="script.js"></script>
 </body>
 </html>

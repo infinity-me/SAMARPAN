@@ -1,8 +1,13 @@
 (function () {
-  // ---------------- Configuration ----------------
-  const API_BASE = "http://localhost:5000"; // backend base URL
+  // ======================
+  // Basic configuration
+  // ======================
+  const API_BASE = "http://localhost:5000"; // Backend base URL
 
-  // ---------------- Utilities ----------------
+  // ======================
+  // Small helpers
+  // ======================
+
   const safeParse = (s, fallback = null) => {
     try {
       return s ? JSON.parse(s) : fallback;
@@ -30,7 +35,7 @@
     el.textContent = message || "";
   }
 
-  // Small helper to run code once DOM is ready
+  // Run callback once DOM is ready
   function onReady(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn);
@@ -39,7 +44,9 @@
     }
   }
 
-  // ---------------- View switching ----------------
+  // ======================
+  // View switching (SPA)
+  // ======================
   function showView(name) {
     if (!name) return;
     const viewId = name.startsWith("view-") ? name : `view-${name}`;
@@ -51,25 +58,49 @@
       v.classList.remove("view-active", "view-anim-in");
     });
 
-    // If view exists, show with animation classes
+    // Show selected view + entry animation
     if (next) {
       next.classList.add("view-active");
-      void next.offsetWidth; // reflow for animation
+      void next.offsetWidth; // force reflow so animation restarts
       next.classList.add("view-anim-in");
     } else if (views[0]) {
       views[0].classList.add("view-active");
     }
 
-    // Optional flash effect
+    // Neon flash line under topbar
     const flash = document.getElementById("switchFlash");
     if (flash) {
       flash.classList.remove("flash-go");
       void flash.offsetWidth;
       flash.classList.add("flash-go");
     }
+
+    // Background slight float/zoom on tab change
+    const body = document.body;
+    if (body) {
+      body.classList.remove("bg-tab-float");
+      void body.offsetWidth;
+      body.classList.add("bg-tab-float");
+    }
+
+    // Staggered animation for cards / blocks in the new view
+    if (next) {
+      const blocks = next.querySelectorAll(
+        ".card, .toolbar-list li, .templates-grid .card, .stats-row .card, .activity-list li"
+      );
+
+      blocks.forEach((el, index) => {
+        el.classList.remove("stagger-in");
+        el.style.animationDelay = `${index * 0.06}s`;
+        void el.offsetWidth;
+        el.classList.add("stagger-in");
+      });
+    }
   }
 
-  // ---------------- Auth modal helpers ----------------
+  // ======================
+  // Auth modal helpers
+  // ======================
   function openAuthModal() {
     const overlay = document.getElementById("authOverlay");
     const status = document.getElementById("authStatus");
@@ -84,6 +115,7 @@
     overlay.classList.add("hidden");
   }
 
+  // Gate features behind login and show modal if not logged in
   function requireLogin(message = "Please log in to use this feature.") {
     const user = getCurrentUser();
     if (!user) {
@@ -94,7 +126,9 @@
     return true;
   }
 
-  // ---------------- UI update after login ----------------
+  // ===============================
+  // Update UI when user logs in/out
+  // ===============================
   function updateUIOnLogin(user) {
     const sidebarName = document.querySelector(".user-name");
     const sidebarRole = document.querySelector(".user-role");
@@ -130,49 +164,51 @@
     if (btnLogout) {
       btnLogout.style.display = user ? "inline-flex" : "none";
     }
-      // ===== PROFILE VIEW DATA =====
-  const profileName = document.getElementById("profileName");
-  const profileRole = document.getElementById("profileRole");
-  const profileAvatar = document.getElementById("profileAvatar");
 
-  if (profileName) {
-    profileName.textContent = user?.name || user?.email || "User";
-  }
+    // ---- PROFILE VIEW DATA ----
+    const profileName = document.getElementById("profileName");
+    const profileRole = document.getElementById("profileRole");
+    const profileAvatar = document.getElementById("profileAvatar");
 
-  if (profileRole) {
-    profileRole.textContent = "Host • Team Samarpan";
-  }
+    if (profileName) {
+      profileName.textContent = user?.name || user?.email || "User";
+    }
 
-  if (profileAvatar) {
-    if (user?.avatar) {
-      profileAvatar.innerHTML = `<img src="${user.avatar}" class="profile-img" />`;
-    } else {
-      profileAvatar.textContent =
-        (user?.name || user?.email || "U").charAt(0).toUpperCase();
+    if (profileRole) {
+      profileRole.textContent = "Host • Team Samarpan";
+    }
+
+    if (profileAvatar) {
+      if (user?.avatar) {
+        profileAvatar.innerHTML = `<img src="${user.avatar}" class="profile-img" />`;
+      } else {
+        profileAvatar.textContent =
+          (user?.name || user?.email || "U").charAt(0).toUpperCase();
+      }
+    }
+
+    // Sidebar avatar circle
+    if (sidebarAvatar) {
+      sidebarAvatar.innerHTML = "";
+
+      if (user && user.avatar) {
+        const img = document.createElement("img");
+        img.src = user.avatar;
+        img.alt = "avatar";
+        img.className = "profile-img";
+        sidebarAvatar.appendChild(img);
+      } else {
+        const letter = (user?.name || user?.email || "U")
+          .charAt(0)
+          .toUpperCase();
+        sidebarAvatar.textContent = letter;
+      }
     }
   }
 
-  if (sidebarAvatar) {
-    sidebarAvatar.innerHTML = "";
-
-    if (user && user.avatar) {
-      const img = document.createElement("img");
-      img.src = user.avatar;
-      img.alt = "avatar";
-      img.className = "profile-img";
-      sidebarAvatar.appendChild(img);
-    } else {
-      const letter = (user?.name || user?.email || "U")
-        .charAt(0)
-        .toUpperCase();
-      sidebarAvatar.textContent = letter;
-    }
-  }
-
-
-  }
-
-  // ---------------- Social token handling (SSO) ----------------
+  // ====================================
+  // Social login token from redirect URL
+  // ====================================
   function handleTokenInURL() {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -196,7 +232,9 @@
     }
   }
 
-    // ====== SIMPLE QUIZ PLAYER STATE ======
+  // ======================
+  // Simple quiz player
+  // ======================
   let playerQuiz = null;
   let playerIndex = 0;
   let playerCorrect = 0;
@@ -223,7 +261,7 @@
 
   function startQuizPlayer(quiz) {
     const els = getPlayerEls();
-    if (!els.qText) return; // view-player DOM me nahi hai
+    if (!els.qText) return; // view-player not in DOM
 
     if (!quiz || !quiz.questions || !quiz.questions.length) {
       els.qText.textContent = "Quiz data missing.";
@@ -258,7 +296,9 @@
     if (!q) return;
 
     if (els.progress) {
-      els.progress.textContent = `Question ${playerIndex + 1} / ${playerQuiz.questions.length}`;
+      els.progress.textContent = `Question ${playerIndex + 1} / ${
+        playerQuiz.questions.length
+      }`;
     }
     if (els.qText) els.qText.textContent = q.question || "";
 
@@ -342,142 +382,143 @@
     if (els.mainCard) els.mainCard.style.display = "none";
   }
 
+  // ================================
+  // Last AI quiz card in dashboard
+  // ================================
+  function renderLastAIQuizToDashboard() {
+    try {
+      const quizGrid =
+        document.querySelector(".quiz-grid") ||
+        document.getElementById("quizGrid");
+      if (!quizGrid) return;
 
-function renderLastAIQuizToDashboard() {
-  try {
-    const quizGrid =
-      document.querySelector(".quiz-grid") ||
-      document.getElementById("quizGrid");
-    if (!quizGrid) return;
+      const user = getCurrentUser && getCurrentUser();
+      const keyPart =
+        (user && (user.userId || user._id || user.email)) || "guest";
+      const storageKey = `samarpanLastAIQuiz_${keyPart}`;
 
-    const user = getCurrentUser && getCurrentUser();
-    const keyPart =
-      (user && (user.userId || user._id || user.email)) || "guest";
-    const storageKey = `samarpanLastAIQuiz_${keyPart}`;
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
 
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return;
+      const quiz = safeParse(raw, null);
+      if (!quiz) return;
 
-    const quiz = safeParse(raw, null);
-    if (!quiz) return;
+      // Remove older AI card from local storage, if present
+      const old = quizGrid.querySelector('[data-local-ai-card="1"]');
+      if (old) old.remove();
 
-    // Purana AI card hata do (agar hai)
-    const old = quizGrid.querySelector('[data-local-ai-card="1"]');
-    if (old) old.remove();
+      const card = document.createElement("div");
+      card.className = "quiz-card";
+      card.setAttribute("data-local-ai-card", "1");
 
-    const card = document.createElement("div");
-    card.className = "quiz-card";
-    card.setAttribute("data-local-ai-card", "1");
-
-    const qcount = (quiz.questions && quiz.questions.length) || 0;
-    card.innerHTML = `
-      <h4>${quiz.title || "AI Quiz"}</h4>
-      <p>${qcount} questions • AI-generated</p>
-      <div class="quiz-meta">
-        <small>AI • just now</small>
-        <div style="margin-top:6px">
-          <button class="mini-btn ai-play">Play</button>
-          <button class="mini-btn ai-edit">Edit</button>
+      const qcount = (quiz.questions && quiz.questions.length) || 0;
+      card.innerHTML = `
+        <h4>${quiz.title || "AI Quiz"}</h4>
+        <p>${qcount} questions • AI-generated</p>
+        <div class="quiz-meta">
+          <small>AI • just now</small>
+          <div style="margin-top:6px">
+            <button class="mini-btn ai-play">Play</button>
+            <button class="mini-btn ai-edit">Edit</button>
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
-    // 👉 Play: quiz player use karo
-    card.querySelector(".ai-play").addEventListener("click", () => {
-      localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
-      startQuizPlayer(quiz);
-    });
+      // Play via same quiz player
+      card.querySelector(".ai-play").addEventListener("click", () => {
+        localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+        startQuizPlayer(quiz);
+      });
 
-    // 👉 Edit: create view open
-    card.querySelector(".ai-edit").addEventListener("click", () => {
-      localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
-      showView("create");
-      // future: manual editor pre-fill kar sakte ho
-    });
+      // Edit: jump to create view (future: prefill manual editor)
+      card.querySelector(".ai-edit").addEventListener("click", () => {
+        localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+        showView("create");
+      });
 
-    quizGrid.prepend(card);
-  } catch (e) {
-    console.warn("renderLastAIQuizToDashboard error:", e);
+      quizGrid.prepend(card);
+    } catch (e) {
+      console.warn("renderLastAIQuizToDashboard error:", e);
+    }
   }
-}
 
-function renderLastManualQuizToDashboard() {
-  try {
-    const quizGrid =
-      document.querySelector(".quiz-grid") ||
-      document.getElementById("quizGrid");
-    if (!quizGrid) return;
+  // ==================================
+  // Last manual quiz card in dashboard
+  // ==================================
+  function renderLastManualQuizToDashboard() {
+    try {
+      const quizGrid =
+        document.querySelector(".quiz-grid") ||
+        document.getElementById("quizGrid");
+      if (!quizGrid) return;
 
-    // Current user ke hisaab se key
-    const user = getCurrentUser && getCurrentUser();
-    const keyPart =
-      (user && (user.userId || user._id || user.email)) || "guest";
-    const storageKey = `samarpanLastManualQuiz_${keyPart}`;
+      const user = getCurrentUser && getCurrentUser();
+      const keyPart =
+        (user && (user.userId || user._id || user.email)) || "guest";
+      const storageKey = `samarpanLastManualQuiz_${keyPart}`;
 
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return;
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
 
-    const quiz = safeParse(raw, null);
-    if (!quiz) return;
+      const quiz = safeParse(raw, null);
+      if (!quiz) return;
 
-    // Purana manual card delete karo
-    const old = quizGrid.querySelector('[data-local-manual-card="1"]');
-    if (old) old.remove();
+      // Remove previous manual-quiz card
+      const old = quizGrid.querySelector('[data-local-manual-card="1"]');
+      if (old) old.remove();
 
-    const card = document.createElement("div");
-    card.className = "quiz-card";
-    card.setAttribute("data-local-manual-card", "1");
+      const card = document.createElement("div");
+      card.className = "quiz-card";
+      card.setAttribute("data-local-manual-card", "1");
 
-    const qcount = (quiz.questions && quiz.questions.length) || 0;
-    card.innerHTML = `
-      <h4>${quiz.title || "My manual quiz"}</h4>
-      <p>${qcount} questions • Manual</p>
-      <div class="quiz-meta">
-        <small>Created by you</small>
-        <div style="margin-top:6px">
-          <button class="mini-btn manual-play">Play</button>
-          <button class="mini-btn manual-host">Host</button>
+      const qcount = (quiz.questions && quiz.questions.length) || 0;
+      card.innerHTML = `
+        <h4>${quiz.title || "My manual quiz"}</h4>
+        <p>${qcount} questions • Manual</p>
+        <div class="quiz-meta">
+          <small>Created by you</small>
+          <div style="margin-top:6px">
+            <button class="mini-btn manual-play">Play</button>
+            <button class="mini-btn manual-host">Host</button>
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
-    // 👉 Play: simple quiz player
-    card.querySelector(".manual-play").addEventListener("click", () => {
-      localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
-      startQuizPlayer(quiz);
-    });
+      // Play via quiz player
+      card.querySelector(".manual-play").addEventListener("click", () => {
+        localStorage.setItem("samarpanCurrentQuiz", JSON.stringify(quiz));
+        startQuizPlayer(quiz);
+      });
 
-    // 👉 Host: host view open + dropdown select
-    card.querySelector(".manual-host").addEventListener("click", () => {
-      const hostSelect = document.getElementById("host-quiz");
-      if (hostSelect) {
-        // ensure option exists
-        let opt = Array.from(hostSelect.options).find(
-          (o) => o.value === "manual-last"
-        );
-        if (!opt) {
-          opt = document.createElement("option");
-          opt.value = "manual-last";
-          opt.textContent = quiz.title || "My last manual quiz";
-          hostSelect.appendChild(opt);
+      // Host: open host view and preselect this quiz (manual-last)
+      card.querySelector(".manual-host").addEventListener("click", () => {
+        const hostSelect = document.getElementById("host-quiz");
+        if (hostSelect) {
+          let opt = Array.from(hostSelect.options).find(
+            (o) => o.value === "manual-last"
+          );
+          if (!opt) {
+            opt = document.createElement("option");
+            opt.value = "manual-last";
+            opt.textContent = quiz.title || "My last manual quiz";
+            hostSelect.appendChild(opt);
+          }
+          hostSelect.value = "manual-last";
         }
-        hostSelect.value = "manual-last";
-      }
-      showView("host");
-      const hostForm = document.querySelector(".host-form");
-      if (hostForm) {
-        hostForm.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
+        showView("host");
+        const hostForm = document.querySelector(".host-form");
+        if (hostForm) {
+          hostForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
 
-    quizGrid.prepend(card);
-  } catch (e) {
-    console.warn("renderLastManualQuizToDashboard error:", e);
+      quizGrid.prepend(card);
+    } catch (e) {
+      console.warn("renderLastManualQuizToDashboard error:", e);
+    }
   }
-}
 
-
-
+  // Hide full-page auth view (we use modal instead)
   function hideAuthView() {
     const authView = document.getElementById("view-auth");
     if (authView) {
@@ -485,9 +526,11 @@ function renderLastManualQuizToDashboard() {
     }
   }
 
-  // ---------------- Attach event handlers ----------------
+  // ======================
+  // Event bindings
+  // ======================
   function attachHandlers() {
-    // Sidebar toggle (mobile)
+    // Sidebar open/close on small screens
     (function () {
       const sidebar = document.querySelector(".sidebar");
       const sidebarToggle = document.getElementById("sidebarToggle");
@@ -502,24 +545,23 @@ function renderLastManualQuizToDashboard() {
       }
     })();
 
-    // Year in footer
-    (function () {
-      const yearSpan = document.getElementById("year");
-      if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-    })();
-
-    // Data-view links (primary navigation)
+    // All buttons/links having data-view attribute
     (function () {
       document.querySelectorAll("[data-view]").forEach((el) => {
         el.addEventListener("click", (e) => {
           e.preventDefault();
           const view = el.getAttribute("data-view");
           const user = getCurrentUser();
+
+          // If user is logged in and clicks auth view, send them to dashboard instead
           if ((view === "view-auth" || view === "view-login") && user) {
             showView("dashboard");
             return;
           }
+
           showView(view);
+
+          // Sidebar active state
           if (el.classList.contains("side-link")) {
             document
               .querySelectorAll(".side-link")
@@ -530,7 +572,9 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
-    // ================= AUTH CORE DOM REFS =================
+    // ==========================
+    // Auth modal core references
+    // ==========================
     const authOverlay = document.getElementById("authOverlay");
     const authCloseBtn = document.getElementById("authCloseBtn");
     const tabLogin = document.getElementById("tabLogin");
@@ -542,12 +586,12 @@ function renderLastManualQuizToDashboard() {
     const authStatus = document.getElementById("authStatus");
     const authGoSignup = document.getElementById("authGoSignup");
 
-    // Close (X button)
+    // Close modal (X button)
     if (authCloseBtn) {
       authCloseBtn.addEventListener("click", closeAuthModal);
     }
 
-    // Click outside to close
+    // Click on dark overlay closes modal
     if (authOverlay) {
       authOverlay.addEventListener("click", (e) => {
         if (e.target === authOverlay) {
@@ -556,14 +600,16 @@ function renderLastManualQuizToDashboard() {
       });
     }
 
-    // ESC key to close
+    // Escape key closes modal
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         closeAuthModal();
       }
     });
 
-    // ================= LOGIN <-> SIGNUP TABS =================
+    // ==========================
+    // Auth tabs (Login / Signup)
+    // ==========================
     if (tabLogin && tabSignup && loginPanel && signupPanel) {
       tabLogin.addEventListener("click", () => {
         tabLogin.classList.add("auth-tab-active");
@@ -589,7 +635,7 @@ function renderLastManualQuizToDashboard() {
       });
     }
 
-    // Bottom text: "Don’t have an account? Sign up"
+    // “Don’t have an account? Sign up” shortcut
     if (authGoSignup && tabSignup) {
       authGoSignup.addEventListener("click", (e) => {
         e.preventDefault();
@@ -597,7 +643,9 @@ function renderLastManualQuizToDashboard() {
       });
     }
 
-    // ================= SIGNUP REQUEST =================
+    // ======================
+    // Signup (email/password)
+    // ======================
     (function () {
       const signupBtn = document.getElementById("signupSubmit");
       if (!signupBtn) return;
@@ -647,7 +695,9 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
-    // ================= LOGIN REQUEST =================
+    // ======================
+    // Login (email/password)
+    // ======================
     (function () {
       const loginBtn = document.getElementById("loginSubmit");
       if (!loginBtn) return;
@@ -685,10 +735,9 @@ function renderLastManualQuizToDashboard() {
             return;
           }
 
-          // SUCCESS
+          // Success
           showStatusText(authStatus, "Login successful!", "#16a34a");
 
-          // Save + UI update
           localStorage.setItem("samarpanUser", JSON.stringify(data));
           updateUIOnLogin(data);
           hideAuthView();
@@ -711,7 +760,9 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
+    // ======================
     // Social login buttons
+    // ======================
     (function () {
       const socialGoogle = document.getElementById("socialGoogle");
       if (socialGoogle) {
@@ -727,82 +778,100 @@ function renderLastManualQuizToDashboard() {
       }
     })();
 
-// ================= AI generate =================
-(function () {
-  const aiGenerateBtn = document.getElementById("aiGenerateBtn");
-  const aiStatus      = document.getElementById("aiStatus");
-  const aiPlayBtn     = document.getElementById("aiPlayBtn");
-  if (!aiGenerateBtn) return;
+    // ======================
+    // AI quiz generation
+    // ======================
+    (function () {
+      const aiGenerateBtn = document.getElementById("aiGenerateBtn");
+      const aiStatus = document.getElementById("aiStatus");
+      const aiPlayBtn = document.getElementById("aiPlayBtn");
+      if (!aiGenerateBtn) return;
 
+      aiGenerateBtn.addEventListener("click", async () => {
+        if (!requireLogin("Please log in to generate AI quizzes.")) return;
 
-  aiGenerateBtn.addEventListener("click", async () => {
-    if (!requireLogin("Please log in to generate AI quizzes.")) return;
+        const currentUser = getCurrentUser();
+        const titleRaw = document.getElementById("aiTitle")?.value.trim();
+        const topic = document.getElementById("aiTopic")?.value.trim();
+        const difficulty =
+          document.getElementById("aiDifficulty")?.value || "medium";
+        const questionCount =
+          Number(document.getElementById("aiCount")?.value) || 5;
+        const title = titleRaw || "AI Quiz";
 
-    const currentUser = getCurrentUser();
-    const titleRaw    = document.getElementById("aiTitle")?.value.trim();
-    const topic       = document.getElementById("aiTopic")?.value.trim();
-    const difficulty  =
-      document.getElementById("aiDifficulty")?.value || "medium";
-    const questionCount =
-      Number(document.getElementById("aiCount")?.value) || 5;
-    const title = titleRaw || "AI Quiz";
+        if (!topic) {
+          showStatusText(
+            aiStatus,
+            "Please enter a topic for the quiz.",
+            "#b91c1c"
+          );
+          return;
+        }
+        showStatusText(aiStatus, "Generating AI quiz...", "#4b5563");
 
-    if (!topic) {
-      showStatusText(aiStatus, "Please enter a topic for the quiz.", "#b91c1c");
-      return;
-    }
-    showStatusText(aiStatus, "Generating AI quiz...", "#4b5563");
+        try {
+          const res = await fetch(`${API_BASE}/api/ai/generate-quiz`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title,
+              topic,
+              difficulty,
+              count: questionCount,
+              userId:
+                currentUser?.userId ||
+                currentUser?._id ||
+                currentUser?.email,
+              tags: [topic.toLowerCase()],
+            }),
+          });
 
-    try {
-      const res = await fetch(`${API_BASE}/api/ai/generate-quiz`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          topic,
-          difficulty,
-          count: questionCount,
-          userId:
-            currentUser?.userId || currentUser?._id || currentUser?.email,
-          tags: [topic.toLowerCase()],
-        }),
+          const data = await res.json();
+          if (!res.ok) {
+            showStatusText(
+              aiStatus,
+              data.error || "AI quiz generation failed.",
+              "#b91c1c"
+            );
+            return;
+          }
+
+          // Save quiz in localStorage per user
+          if (data.quiz) {
+            const u = getCurrentUser && getCurrentUser();
+            const keyPart =
+              (u && (u.userId || u._id || u.email)) || "guest";
+            const storageKey = `samarpanLastAIQuiz_${keyPart}`;
+            localStorage.setItem(storageKey, JSON.stringify(data.quiz));
+          }
+
+          showStatusText(
+            aiStatus,
+            "AI quiz generated successfully!",
+            "#16a34a"
+          );
+          renderLastAIQuizToDashboard();
+
+          if (aiPlayBtn && data.quiz) {
+            aiPlayBtn.style.display = "inline-flex";
+            aiPlayBtn.onclick = () => {
+              startQuizPlayer(data.quiz);
+            };
+          }
+        } catch (err) {
+          console.error("AI Quiz Error:", err);
+          showStatusText(
+            aiStatus,
+            "Network error while generating quiz.",
+            "#b91c1c"
+          );
+        }
       });
+    })();
 
-      const data = await res.json();
-      if (!res.ok) {
-        showStatusText(aiStatus, data.error || "AI quiz generation failed.", "#b91c1c");
-        return;
-      }
-
-      // 🔐 user-specific key
-      if (data.quiz) {
-        const u      = getCurrentUser && getCurrentUser();
-        const keyPart =
-          (u && (u.userId || u._id || u.email)) || "guest";
-        const storageKey = `samarpanLastAIQuiz_${keyPart}`;
-
-        localStorage.setItem(storageKey, JSON.stringify(data.quiz));
-      }
-
-      showStatusText(aiStatus, "AI quiz generated successfully!", "#16a34a");
-      renderLastAIQuizToDashboard();
-
-      if (aiPlayBtn && data.quiz) {
-        aiPlayBtn.style.display = "inline-flex";
-        aiPlayBtn.onclick = () => {
-
-          startQuizPlayer(data.quiz);
-        };
-      }
-
-    } catch (err) {
-      console.error("AI Quiz Error:", err);
-      showStatusText(aiStatus, "Network error while generating quiz.", "#b91c1c");
-    }
-  });
-})();
-
-    // ===== Quiz player buttons =====
+    // ======================
+    // Quiz player buttons
+    // ======================
     (function () {
       const nextBtn = document.getElementById("playerNextBtn");
       const backBtn = document.getElementById("playerBackDashboard");
@@ -827,9 +896,9 @@ function renderLastManualQuizToDashboard() {
       }
     })();
 
-
-
-    // ================== MANUAL QUIZ EDITOR LOGIC ==================
+    // ==================================
+    // Manual quiz editor (create view)
+    // ==================================
     (function () {
       let manualQuestions = [];
 
@@ -891,7 +960,7 @@ function renderLastManualQuizToDashboard() {
         listEl.innerHTML = html;
       }
 
-      // ADD QUESTION
+      // Add a single question to the in-memory quiz
       addBtn.addEventListener("click", () => {
         const qTextEl = document.getElementById("qText");
         const opt0El = document.getElementById("opt0");
@@ -962,7 +1031,7 @@ function renderLastManualQuizToDashboard() {
         renderQuestionList();
       });
 
-      // SAVE QUIZ
+      // Save the quiz to backend + localStorage
       saveBtn.addEventListener("click", async () => {
         const title = titleInput?.value.trim() || "";
         const topic = topicInput?.value.trim() || "";
@@ -1018,11 +1087,12 @@ function renderLastManualQuizToDashboard() {
           setStatus("Quiz saved successfully to Samarpan!", "#16a34a");
           console.log("Saved quiz:", data);
 
-          // Last manual quiz to localStorage (per user)
+          // Persist last manual quiz per user
           try {
             const quizToStore = data.quiz || data.quizDoc || data;
 
-            const u = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+            const u =
+              typeof getCurrentUser === "function" ? getCurrentUser() : null;
             const userKeyPart =
               (u && (u.userId || u._id || u.email)) || "guest";
 
@@ -1031,11 +1101,11 @@ function renderLastManualQuizToDashboard() {
           } catch (e) {
             console.warn("Could not store last manual quiz:", e);
           }
-          // Dashboard par manual quiz card refresh karo
+
+          // Update dashboard card
           renderLastManualQuizToDashboard();
 
-
-          // Reset state
+          // Reset local state
           manualQuestions = [];
           renderQuestionList();
           if (titleInput) titleInput.value = "";
@@ -1050,12 +1120,13 @@ function renderLastManualQuizToDashboard() {
       renderQuestionList();
     })();
 
-    // ========== ADD CURRENT USER'S LAST MANUAL QUIZ TO HOST DROPDOWN ==========
+    // Add "My last manual quiz" into host dropdown on load (if exists)
     (function () {
       const select = document.getElementById("host-quiz");
       if (!select) return;
 
-      const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+      const user =
+        typeof getCurrentUser === "function" ? getCurrentUser() : null;
       const userKeyPart =
         (user && (user.userId || user._id || user.email)) || "guest";
 
@@ -1077,7 +1148,9 @@ function renderLastManualQuizToDashboard() {
       select.appendChild(opt);
     })();
 
-    // Leaderboard
+    // ======================
+    // Legacy leaderboard / explore / rating history (UI hooks)
+    // ======================
     (function () {
       const btn = document.getElementById("leaderboardBtn");
       if (!btn) return;
@@ -1089,8 +1162,7 @@ function renderLastManualQuizToDashboard() {
             return;
           }
           const data = await res.json();
-          const container =
-            document.getElementById("leaderboardContainer");
+          const container = document.getElementById("leaderboardContainer");
           if (container) {
             container.innerHTML = (data.scores || [])
               .map(
@@ -1107,7 +1179,6 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
-    // Explore (public quizzes)
     (function () {
       const btn = document.getElementById("exploreBtn");
       if (!btn) return;
@@ -1138,7 +1209,6 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
-    // Rating history
     (function () {
       const btn = document.getElementById("ratingHistoryBtn");
       if (!btn) return;
@@ -1158,9 +1228,7 @@ function renderLastManualQuizToDashboard() {
           }
           const data = await res.json();
           const modal = document.getElementById("ratingModal");
-          const container = document.getElementById(
-            "ratingHistoryContainer"
-          );
+          const container = document.getElementById("ratingHistoryContainer");
           if (!modal || !container) {
             alert("Rating UI not present");
             return;
@@ -1181,7 +1249,9 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
-    // Profile + Logout handlers
+    // ======================
+    // Profile + logout button
+    // ======================
     (function () {
       const profileBtn = document.getElementById("profileBtn");
       if (profileBtn) {
@@ -1210,22 +1280,22 @@ function renderLastManualQuizToDashboard() {
       }
     })();
 
-        // ================= DASHBOARD TOOLBAR + "HOST AGAIN" BUTTONS =================
+    // ======================
+    // Dashboard toolbar shortcuts
+    // ======================
     (function () {
-      const toolCreateManual      = document.getElementById("toolCreateManual");
-      const toolCreateAI          = document.getElementById("toolCreateAI");
-      const toolLiveTournaments   = document.getElementById("toolLiveTournaments");
-      const hostSelect            = document.getElementById("host-quiz");
+      const toolCreateManual = document.getElementById("toolCreateManual");
+      const toolCreateAI = document.getElementById("toolCreateAI");
+      const toolLiveTournaments =
+        document.getElementById("toolLiveTournaments");
+      const hostSelect = document.getElementById("host-quiz");
 
-      // ---- Toolbar: Create quiz (manual) ----
+      // Manual create from toolbar
       if (toolCreateManual) {
         toolCreateManual.addEventListener("click", () => {
           if (!requireLogin("Please log in to create a quiz.")) return;
-
-          // Create view khol do
           showView("create");
 
-          // Manual editor kholne ke liye button ko hi click karwa dete hain
           const btnOpenEditor = document.getElementById("btnOpenManualEditor");
           if (btnOpenEditor) {
             btnOpenEditor.click();
@@ -1233,22 +1303,23 @@ function renderLastManualQuizToDashboard() {
         });
       }
 
-      // ---- Toolbar: Create quiz (AI) ----
+      // AI create from toolbar
       if (toolCreateAI) {
         toolCreateAI.addEventListener("click", () => {
           if (!requireLogin("Please log in to use AI quizzes.")) return;
 
           showView("create");
 
-          // AI wala card tak smooth scroll (2nd create-card approx AI card hai)
-          const aiCard = document.querySelector("#view-create .create-card:nth-of-type(2)");
+          const aiCard = document.querySelector(
+            "#view-create .create-card:nth-of-type(2)"
+          );
           if (aiCard) {
             aiCard.scrollIntoView({ behavior: "smooth", block: "start" });
           }
         });
       }
 
-      // ---- Toolbar: Live tournaments -> abhi ke liye Host view khol do ----
+      // Live tournaments -> redirect to host view for now
       if (toolLiveTournaments) {
         toolLiveTournaments.addEventListener("click", () => {
           if (!requireLogin("Please log in to host tournaments.")) return;
@@ -1261,8 +1332,7 @@ function renderLastManualQuizToDashboard() {
         });
       }
 
-      // ---- Dashboard "Host again" buttons ----
-      // sirf un mini-btns ko pakdo jinke text me "host again" likha hai
+      // “Host again” buttons inside dashboard quiz cards
       const hostAgainButtons = Array.from(
         document.querySelectorAll(".quiz-card .mini-btn")
       ).filter((btn) =>
@@ -1273,10 +1343,9 @@ function renderLastManualQuizToDashboard() {
         btn.addEventListener("click", () => {
           if (!requireLogin("Please log in to host a quiz.")) return;
 
-          const card  = btn.closest(".quiz-card");
+          const card = btn.closest(".quiz-card");
           const title = card?.querySelector("h4")?.textContent?.trim();
 
-          // host dropdown me matching option select karne ki koshish
           if (hostSelect && title) {
             const match = Array.from(hostSelect.options).find(
               (opt) => opt.textContent.trim() === title
@@ -1286,7 +1355,6 @@ function renderLastManualQuizToDashboard() {
             }
           }
 
-          // Host view dikhao
           showView("host");
 
           const hostForm = document.querySelector(".host-form");
@@ -1297,27 +1365,9 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
-    // Protect important feature buttons
-    (function () {
-      const protectedActions = [
-        "toolCreateManual",
-        "toolCreateAI",
-        "toolLiveTournaments",
-      ];
-      protectedActions.forEach((id) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener("click", (e) => {
-          if (!requireLogin()) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        });
-      });
-    })();
-
-
-        // ================= HOST QUIZ BUTTON =================
+    // ======================
+    // Host quiz button logic
+    // ======================
     (function () {
       const btn = document.getElementById("btnHostStart");
       const statusEl = document.getElementById("hostStatus");
@@ -1343,10 +1393,10 @@ function renderLastManualQuizToDashboard() {
         const selected = selectQuiz.value;
         let quizId = null;
 
-        // sirf "My last manual quiz" ke liye abhi proper host kar rahe hain
+        // For now, only treating "My last manual quiz" as hostable
         if (selected === "manual-last") {
           const userKeyPart =
-            (user.userId || user._id || user.email || "guest");
+            user.userId || user._id || user.email || "guest";
           const storageKey = `samarpanLastManualQuiz_${userKeyPart}`;
           const raw = localStorage.getItem(storageKey);
           const quiz = safeParse(raw, null);
@@ -1394,7 +1444,7 @@ function renderLastManualQuizToDashboard() {
             `Game started! PIN: ${data.pin}. Share this with players.`,
             "#16a34a"
           );
-          alert(`Game PIN: ${data.pin}\n(Prototype – join UI abhi pending)`);
+          alert(`Game PIN: ${data.pin}\n(Prototype – join UI is coming soon)`);
         } catch (err) {
           console.error("Host start network error:", err);
           setHostStatus("Network error while starting game.", "#b91c1c");
@@ -1402,13 +1452,15 @@ function renderLastManualQuizToDashboard() {
       });
     })();
 
-        // ================= BATTLES VIEW (2v2 / 4v4) =================
+    // ======================
+    // Battles view (2v2 / 4v4)
+    // ======================
     (function () {
       const selectBattleQuiz = document.getElementById("battle-quiz");
-      const statusEl         = document.getElementById("battleStatus");
-      const btnHost          = document.getElementById("btnBattleHost");
-      const btnLocal         = document.getElementById("btnBattlePlayLocal");
-      const btnJoin          = document.getElementById("btnBattleJoin");
+      const statusEl = document.getElementById("battleStatus");
+      const btnHost = document.getElementById("btnBattleHost");
+      const btnLocal = document.getElementById("btnBattlePlayLocal");
+      const btnJoin = document.getElementById("btnBattleJoin");
 
       function setBattleStatus(msg, color = "#e5e7eb") {
         if (!statusEl) return;
@@ -1416,7 +1468,7 @@ function renderLastManualQuizToDashboard() {
         statusEl.style.color = color;
       }
 
-      // --- Dropdown labels set karo (per-user last manual / AI quiz) ---
+      // Label per-user battle quiz options
       if (selectBattleQuiz) {
         const user = getCurrentUser && getCurrentUser();
         const userKeyPart =
@@ -1438,9 +1490,7 @@ function renderLastManualQuizToDashboard() {
         }
 
         // AI last
-        const optAI = selectBattleQuiz.querySelector(
-          'option[value="ai-last"]'
-        );
+        const optAI = selectBattleQuiz.querySelector('option[value="ai-last"]');
         if (optAI) {
           const key = `samarpanLastAIQuiz_${userKeyPart}`;
           const raw = localStorage.getItem(key);
@@ -1453,7 +1503,7 @@ function renderLastManualQuizToDashboard() {
         }
       }
 
-      // --- Host battle -> backend ko /api/host/start call (prototype meta ke saath) ---
+      // Create battle session (backend pin + metadata)
       if (btnHost) {
         btnHost.addEventListener("click", async () => {
           if (!requireLogin("Please log in to host a battle.")) return;
@@ -1462,7 +1512,8 @@ function renderLastManualQuizToDashboard() {
           if (!user) return;
 
           const selectQuiz = document.getElementById("battle-quiz");
-          const battleType = document.getElementById("battle-type")?.value || "2v2";
+          const battleType =
+            document.getElementById("battle-type")?.value || "2v2";
           const timerSeconds =
             Number(document.getElementById("battle-timer")?.value) || 30;
           const rated =
@@ -1470,7 +1521,10 @@ function renderLastManualQuizToDashboard() {
             "rated";
 
           if (!selectQuiz || !selectQuiz.value) {
-            setBattleStatus("Choose which quiz to use for the battle.", "#b91c1c");
+            setBattleStatus(
+              "Choose which quiz to use for the battle.",
+              "#b91c1c"
+            );
             return;
           }
 
@@ -1506,8 +1560,8 @@ function renderLastManualQuizToDashboard() {
               body: JSON.stringify({
                 quizId,
                 hostEmail: user.email,
-                mode: "battle",          // ⬅ backend agar ignore kare to bhi safe
-                battleType,              // extra meta, future use
+                mode: "battle",
+                battleType,
                 timerSeconds,
                 rated,
               }),
@@ -1540,7 +1594,7 @@ function renderLastManualQuizToDashboard() {
         });
       }
 
-      // --- Local battle (same device) -> quiz-player open karo ---
+      // Local battle (same device, uses quiz player)
       if (btnLocal) {
         btnLocal.addEventListener("click", () => {
           if (!requireLogin("Please log in to play.")) return;
@@ -1576,12 +1630,11 @@ function renderLastManualQuizToDashboard() {
             return;
           }
 
-          // Same quiz-player jo hum already use kar rahe hain
           startQuizPlayer(quiz);
         });
       }
 
-      // --- Join battle (prototype alert only) ---
+      // Join battle: prototype confirmation only
       if (btnJoin) {
         btnJoin.addEventListener("click", () => {
           const pin =
@@ -1599,30 +1652,15 @@ function renderLastManualQuizToDashboard() {
           }
 
           alert(
-            `Prototype:\nJoining battle PIN ${pin} as "${name}".\n\nFull version me yahan se live team battle UI open hoga (Socket.io).`
+            `Prototype:\nJoining battle PIN ${pin} as "${name}".\n\nLive multi-player UI will be added in the full version (Socket.io).`
           );
         });
       }
     })();
 
-
-    // Data-copy convenience
-    (function () {
-      document.querySelectorAll("[data-copy]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const key = btn.getAttribute("data-copy");
-          const v = document.getElementById(key)?.textContent || "";
-          if (v) {
-            navigator.clipboard
-              .writeText(v)
-              .then(() => alert("Copied"))
-              .catch(() => alert("Copy failed"));
-          }
-        });
-      });
-    })();
-
-    // ================= AUTH BUTTON FINAL LOGIC =================
+    // ======================
+    // Topbar auth / host buttons
+    // ======================
     (function () {
       const btnAuthTop = document.getElementById("btnAuthTop");
       const btnAvatarTop = document.getElementById("btnAvatarTop");
@@ -1656,36 +1694,37 @@ function renderLastManualQuizToDashboard() {
         });
       }
     })();
-  } // end attachHandlers
+  }
 
-  // ---------------- Initialization ----------------
+  // ======================
+  // Initial boot
+  // ======================
   onReady(() => {
-    // Apply token if present in URL (SSO redirects)
+    // Handle redirect token from Google/Facebook
     handleTokenInURL();
 
-    // Hydrate UI if user already logged in
+    // Restore user if already logged in
     const existing = getCurrentUser();
     if (existing) {
       updateUIOnLogin(existing);
     }
 
-    // Attach all event handlers
+    // Bind all events
     attachHandlers();
 
-    // Render last AI quiz if available
+    // Show last AI / manual quiz cards if present
     renderLastAIQuizToDashboard();
-
-    // Render last manual quiz if available
     renderLastManualQuizToDashboard();
 
-
-    // Default view: dashboard if available
+    // Default view
     if (document.getElementById("view-dashboard")) {
       showView("dashboard");
     }
   });
 
-  // ========== MANUAL EDITOR OPEN BUTTON ==========
+  // ======================
+  // Manual editor open button
+  // ======================
   (function () {
     const openBtn = document.getElementById("btnOpenManualEditor");
     const editor = document.getElementById("manualEditor");
@@ -1702,7 +1741,9 @@ function renderLastManualQuizToDashboard() {
     });
   })();
 
-  // ---------------- Expose a small API for debugging ----------------
+  // ======================
+  // Simple debug handle
+  // ======================
   window.Samarpan = {
     getCurrentUser,
     setCurrentUser,

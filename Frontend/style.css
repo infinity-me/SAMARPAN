@@ -1,5 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
+/* ===========================
+   GLOBAL THEME VARIABLES
+   =========================== */
 :root {
   --bg: #020617;
   --bg-soft: #0b1120;
@@ -15,6 +18,7 @@
   --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.7);
 }
 
+/* Basic reset */
 *,
 *::before,
 *::after {
@@ -30,28 +34,56 @@ body {
   height: 100%;
 }
 
-/* animated dynamic background */
+/* ===========================
+   BACKGROUND – GAMING IMAGE
+   =========================== */
+
 body {
+  margin: 0;
+  min-height: 100vh;
   line-height: 1.6;
-  background: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #000 100%);
-  background-size: 200% 200%;
-  animation: bg-move 18s ease-in-out infinite alternate;
   color: var(--text);
+
+  /* Background overlay + main image */
+  background-image:
+    radial-gradient(
+      circle at center,
+      rgba(0, 0, 0, 0.25),
+      rgba(0, 0, 0, 0.65)
+    ),
+    url("https://t3.ftcdn.net/jpg/02/87/87/18/360_F_287871802_GrrmM4RgBQt7hfIPYFTkRqaj2Fb8xvY4.jpg");
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+
+  overflow-x: hidden;
 }
 
-@keyframes bg-move {
+/* Tab change par background ko halka zoom/float effect */
+body.bg-tab-float {
+  animation: bg-tab-float 0.6s ease-out;
+}
+
+@keyframes bg-tab-float {
   0% {
-    background-position: 0% 0%;
+    background-position: center;
+    transform: scale(1);
   }
-  50% {
-    background-position: 50% 80%;
+  40% {
+    background-position: 52% 48%;
+    transform: scale(1.03);
   }
   100% {
-    background-position: 100% 0%;
+    background-position: center;
+    transform: scale(1);
   }
 }
 
-/* Scrollbar */
+/* ===========================
+   CUSTOM SCROLLBAR
+   =========================== */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -63,14 +95,20 @@ body {
   border-radius: 999px;
 }
 
-/* Layout */
+/* ===========================
+   MAIN LAYOUT
+   =========================== */
+
 .app {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
 }
 
-/* SIDEBAR */
+/* ===========================
+   SIDEBAR
+   =========================== */
+
 .sidebar {
   position: sticky;
   top: 0;
@@ -90,6 +128,7 @@ body {
   justify-content: space-between;
 }
 
+/* Brand / logo text */
 .brand {
   display: flex;
   align-items: center;
@@ -115,6 +154,7 @@ body {
   letter-spacing: 0.06em;
 }
 
+/* Sidebar toggle (mobile) */
 .sidebar-toggle {
   display: none;
   background: transparent;
@@ -124,7 +164,10 @@ body {
   cursor: pointer;
 }
 
-/* User */
+/* ===========================
+   USER BOX (SIDEBAR)
+   =========================== */
+
 .user-box {
   display: flex;
   align-items: center;
@@ -160,7 +203,10 @@ body {
   color: var(--text-soft);
 }
 
-/* Side nav */
+/* ===========================
+   SIDE NAV BUTTONS
+   =========================== */
+
 .side-nav {
   margin-top: 0.8rem;
   display: flex;
@@ -183,9 +229,11 @@ body {
   justify-content: space-between;
   transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
+
 /* ============================================
-   GAMING HOVER EFFECT – neon, blur, glow, shake
+   GAMING HOVER EFFECT – NEON + GLOW + SWEEP
    ============================================ */
+
 .side-link,
 .top-link,
 .top-btn {
@@ -202,7 +250,7 @@ body {
   text-shadow: 0 0 10px #a5b4fc, 0 0 20px #818cf8;
 }
 
-/* neon border pulse */
+/* Neon border pulse */
 .side-link:hover::before,
 .top-link:hover::before,
 .top-btn:hover::before {
@@ -221,7 +269,7 @@ body {
   100% { opacity: 1; transform: scale(1.05); }
 }
 
-/* laser sweep line */
+/* Laser line swipe */
 .side-link:hover::after,
 .top-link:hover::after,
 .top-btn:hover::after {
@@ -243,7 +291,7 @@ body {
   100% { left: 120%; }
 }
 
-/* shockwave circular pulse */
+/* Circular shockwave glow */
 .side-link:hover .shockwave,
 .top-link:hover .shockwave,
 .top-btn:hover .shockwave {
@@ -265,7 +313,6 @@ body {
   transition: 0.45s cubic-bezier(0.19,1,0.22,1);
 }
 
-
 .side-link:hover {
   background: rgba(15, 23, 42, 0.9);
   color: #e5e7eb;
@@ -277,20 +324,23 @@ body {
   transform: translateX(1px);
 }
 
-/* MAIN AREA */
+/* ===========================
+   MAIN AREA
+   =========================== */
+
 .main {
-  background: linear-gradient(
-      135deg,
-      rgba(15, 23, 42, 0.85),
-      rgba(15, 23, 42, 0.95)
-    );
+  background: transparent;  /* Content transparent so bg image visible */
   padding: 1.4rem 1.7rem 2.4rem;
   display: flex;
   flex-direction: column;
   gap: 1.4rem;
+  position: relative;
 }
 
-/* Topbar */
+/* ===========================
+   TOPBAR
+   =========================== */
+
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -340,20 +390,33 @@ body {
   color: var(--text-soft);
 }
 
+/* Top-right avatar */
 .top-profile {
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  background: radial-gradient(circle at top left, #22c55e, #6366f1);
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 1), 0 0 14px rgba(129, 140, 248, 0.8);
 }
 
-/* Updates strip */
+/* Image inserted from JS */
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ===========================
+   UPDATES STRIP (TOP CARD)
+   =========================== */
+
 .updates-strip {
   border-radius: var(--radius-xl);
   background: linear-gradient(
@@ -379,28 +442,29 @@ body {
   font-size: 0.8rem;
 }
 
-/* ========= TAB SWITCH ANIMATIONS (GAMING VIBE) ========= */
+/* ===========================
+   TAB SWITCH ANIMATIONS
+   =========================== */
 
-/* base state for all views (jab active nahi ho) */
+/* Hidden by default */
 .view {
   display: none;
   opacity: 0;
   transform: scale(0.98) translateY(12px);
 }
 
-/* jo view active ho, wo visible + normal ho */
+/* Currently active view */
 .view-active {
   display: block;
   opacity: 1;
   transform: scale(1) translateY(0);
 }
 
-/* animate-in class (added from JS on every switch) */
+/* Animate-in class (JS adds on switch) */
 .view-anim-in {
   animation: tab-enter 0.45s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
-/* keyframes: slight zoom + slide + glow */
 @keyframes tab-enter {
   0% {
     opacity: 0;
@@ -419,7 +483,7 @@ body {
   }
 }
 
-/* neon flash line */
+/* Neon flash strip on tab switch */
 .switch-flash {
   position: absolute;
   left: 0;
@@ -452,13 +516,10 @@ body {
   }
 }
 
-/* main ko relative rakho */
-.main {
-  position: relative;
-}
+/* ===========================
+   SECTION BASE STYLES
+   =========================== */
 
-
-/* View header */
 .view-header h2 {
   margin: 0 0 0.2rem;
 }
@@ -475,6 +536,7 @@ body {
   gap: 1.5rem;
 }
 
+/* Generic card */
 .card {
   border-radius: var(--radius-lg);
   background: var(--card-bg);
@@ -483,7 +545,10 @@ body {
   padding: 1.3rem 1.4rem;
 }
 
-/* Toolbar card */
+/* ===========================
+   TOOLBAR CARD
+   =========================== */
+
 .toolbar-card h3 {
   margin-top: 0;
 }
@@ -521,7 +586,10 @@ body {
   color: var(--text-soft);
 }
 
-/* History */
+/* ===========================
+   HISTORY / RECENT QUIZZES
+   =========================== */
+
 .history-card {
   display: flex;
   flex-direction: column;
@@ -534,6 +602,7 @@ body {
   align-items: center;
 }
 
+/* Generic chip */
 .chip {
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.7);
@@ -603,7 +672,10 @@ body {
   color: #c7d2fe;
 }
 
-/* Inline rating bar in dashboard */
+/* ===========================
+   INLINE RATING (DASHBOARD)
+   =========================== */
+
 .inline-rating {
   margin-top: 1rem;
   border-radius: 12px;
@@ -643,7 +715,10 @@ body {
   font-size: 0.75rem;
 }
 
-/* dashboard extra rows */
+/* ===========================
+   DASHBOARD EXTRA STATS
+   =========================== */
+
 .stats-row {
   margin-top: 1.4rem;
   display: grid;
@@ -668,6 +743,8 @@ body {
   color: var(--text-soft);
 }
 
+/* Activity section */
+
 .activity-card {
   margin-top: 1.4rem;
 }
@@ -691,6 +768,7 @@ body {
   padding-block: 0.25rem;
 }
 
+/* Status dots */
 .dot {
   width: 9px;
   height: 9px;
@@ -711,7 +789,10 @@ body {
   background: #eab308;
 }
 
-/* Create view */
+/* ===========================
+   GENERIC GRID LAYOUTS
+   =========================== */
+
 .grid-two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -730,7 +811,10 @@ body {
   color: var(--text-soft);
 }
 
-/* Buttons (global) */
+/* ===========================
+   GLOBAL BUTTON STYLES
+   =========================== */
+
 .btn {
   border-radius: 999px;
   border: none;
@@ -772,27 +856,42 @@ body {
 .full-width {
   width: 100%;
 }
-/* ===== Quiz player basic styles ===== */
+
+/* ===========================
+   QUIZ PLAYER – GENERAL
+   =========================== */
+
 .player-meta {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-soft);
   margin-bottom: 0.6rem;
 }
 
 .player-options {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 0.6rem;
-  margin-top: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .player-option-btn {
   width: 100%;
   text-align: left;
   justify-content: flex-start;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.8);
+}
+
+.player-option-btn:hover:not(:disabled) {
+  border-color: rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 1),
+    0 0 18px rgba(129, 140, 248, 0.9);
 }
 
 .player-status {
@@ -801,7 +900,7 @@ body {
   color: var(--text-soft);
 }
 
-/* correct / wrong highlight */
+/* Correct / wrong states */
 .btn-correct {
   border-color: #22c55e;
   background: rgba(34, 197, 94, 0.12);
@@ -812,8 +911,10 @@ body {
   background: rgba(239, 68, 68, 0.12);
 }
 
+/* ===========================
+   TEMPLATES / TIPS / LISTS
+   =========================== */
 
-/* Templates row */
 .templates-row {
   margin-top: 1.6rem;
 }
@@ -834,12 +935,14 @@ body {
   color: var(--text-soft);
 }
 
-/* Tips */
 .tips-card {
   margin-top: 1.6rem;
 }
 
-/* Leaderboard */
+/* ===========================
+   LEADERBOARD
+   =========================== */
+
 .leaderboard-filters {
   display: flex;
   gap: 0.6rem;
@@ -850,6 +953,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.86rem;
+  margin-top: 0.9rem;
 }
 
 .leaderboard-table th,
@@ -867,7 +971,23 @@ body {
   color: var(--text-soft);
 }
 
-/* leaderboard extra */
+.leaderboard-table tr:nth-child(odd) td {
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.leaderboard-table tr:nth-child(even) td {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.leaderboard-table tbody tr:hover td {
+  background: radial-gradient(circle at left, rgba(56, 189, 248, 0.24), rgba(15, 23, 42, 0.95));
+}
+
+.leaderboard-table td:nth-child(1) {
+  font-weight: 600;
+  color: #fde68a;
+}
+
 .leaderboard-extra {
   margin-top: 1.5rem;
   display: grid;
@@ -881,7 +1001,10 @@ body {
   color: var(--text-soft);
 }
 
-/* Explore */
+/* ===========================
+   EXPLORE VIEW
+   =========================== */
+
 .explore-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -893,7 +1016,7 @@ body {
   color: var(--text-soft);
 }
 
-/* categories */
+/* Categories section */
 .categories-block {
   margin-top: 1.7rem;
 }
@@ -916,7 +1039,10 @@ body {
   color: var(--text-soft);
 }
 
-/* PROFILE VIEW */
+/* ===========================
+   PROFILE VIEW
+   =========================== */
+
 .profile-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
@@ -933,6 +1059,8 @@ body {
   align-items: center;
   gap: 0.9rem;
   margin-bottom: 1rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.8);
 }
 
 .profile-avatar {
@@ -945,32 +1073,18 @@ body {
   justify-content: center;
   font-size: 1.1rem;
   font-weight: 600;
+  box-shadow:
+    0 0 0 3px rgba(15, 23, 42, 1),
+    0 0 24px rgba(129, 140, 248, 0.8);
 }
-
-.top-profile {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  overflow: hidden;      /* ⭐ image crop circular */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* jo image hum innerHTML se daal rahe hain */
-.profile-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
 
 .profile-sub {
   margin: 0.1rem 0 0;
   font-size: 0.86rem;
   color: var(--text-soft);
 }
+
+/* Ratings row */
 
 .rating-row {
   display: grid;
@@ -1049,6 +1163,8 @@ body {
   font-weight: 600;
 }
 
+/* Match history list */
+
 .history-list {
   list-style: none;
   padding: 0;
@@ -1070,10 +1186,12 @@ body {
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
 }
+
 .history-result.win {
   background: rgba(34, 197, 94, 0.18);
   color: #4ade80;
 }
+
 .history-result.loss {
   background: rgba(239, 68, 68, 0.2);
   color: #fecaca;
@@ -1083,11 +1201,15 @@ body {
   font-size: 0.78rem;
 }
 
-/* HOST VIEW */
+/* ===========================
+   HOST VIEW / FORM
+   =========================== */
+
 .host-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   gap: 1.4rem;
+  align-items: stretch;
 }
 
 .field {
@@ -1136,14 +1258,20 @@ body {
   color: var(--text-soft);
 }
 
-/* AUTH VIEW */
+/* ===========================
+   AUTH VIEW LAYOUT
+   =========================== */
+
 .auth-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.4rem;
 }
 
-/* CONTACT VIEW */
+/* ===========================
+   CONTACT VIEW
+   =========================== */
+
 .contact-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
@@ -1154,7 +1282,10 @@ body {
   color: var(--text-soft);
 }
 
-/* ABOUT VIEW */
+/* ===========================
+   ABOUT VIEW
+   =========================== */
+
 .about-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1165,7 +1296,10 @@ body {
   color: var(--text-soft);
 }
 
-/* RESPONSIVE */
+/* ===========================
+   RESPONSIVE BREAKPOINTS
+   =========================== */
+
 @media (max-width: 1024px) {
   .app {
     grid-template-columns: 220px minmax(0, 1fr);
@@ -1240,16 +1374,18 @@ body {
   }
 }
 
-/* ======= AUTH MODAL ======= */
+/* ===========================
+   AUTH MODAL – DARK VERSION
+   =========================== */
 
 .auth-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 100;
   backdrop-filter: blur(4px);
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
@@ -1273,23 +1409,23 @@ body {
 }
 
 @keyframes auth-pop {
-  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .auth-close {
   position: absolute;
-  top: 0.75rem;
+  top: 0.7rem;
   right: 0.9rem;
   border: none;
   background: transparent;
-  color: #64748b;
   font-size: 1.4rem;
   cursor: pointer;
+  color: #9ca3af;
 }
 
 .auth-close:hover {
-  color: #e2e8f0;
+  color: #111827;
 }
 
 .auth-header h2 {
@@ -1427,7 +1563,7 @@ body {
   color: #f97373;
 }
 
-/* optional: nav button */
+/* Small auth button in nav */
 .nav-auth-btn {
   border-radius: 999px;
   padding: 0.25rem 0.8rem;
@@ -1441,25 +1577,11 @@ body {
 .nav-auth-btn:hover {
   background: #111827;
 }
-/* ========== KAHOOT-LIKE AUTH CARD OVERRIDES ========== */
 
-.auth-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-}
-
-.auth-overlay.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
+/* ===========================
+   AUTH – KAHOOT-LIKE CARD
+   (LIGHT THEME OVERRIDE)
+   =========================== */
 
 .auth-modal.auth-kahoot-card {
   width: 460px;
@@ -1473,23 +1595,6 @@ body {
   animation: auth-pop 0.22s ease-out;
 }
 
-@keyframes auth-pop {
-  from { opacity: 0; transform: translateY(14px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.auth-close {
-  position: absolute;
-  top: 0.7rem;
-  right: 0.9rem;
-  border: none;
-  background: transparent;
-  font-size: 1.4rem;
-  cursor: pointer;
-  color: #9ca3af;
-}
-.auth-close:hover { color: #111827; }
-
 .auth-main-title {
   margin: 0 0 0.2rem;
   font-size: 1.4rem;
@@ -1502,7 +1607,7 @@ body {
   color: #6b7280;
 }
 
-/* Social row (top) */
+/* Social buttons row (top) */
 .auth-social-row-top {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1551,11 +1656,12 @@ body {
   font-size: 0.85rem;
   cursor: pointer;
 }
+
 .auth-sso-btn:hover {
   background: #f9fafb;
 }
 
-/* OR divider */
+/* OR divider (light) */
 .auth-or-divider {
   display: flex;
   align-items: center;
@@ -1564,6 +1670,7 @@ body {
   font-size: 0.75rem;
   color: #9ca3af;
 }
+
 .auth-or-divider::before,
 .auth-or-divider::after {
   content: "";
@@ -1572,7 +1679,7 @@ body {
   background: #e5e7eb;
 }
 
-/* Tabs inline */
+/* Tabs inline in card */
 .auth-tabs-inline {
   display: flex;
   gap: 0.4rem;
@@ -1595,14 +1702,7 @@ body {
   color: #ffffff;
 }
 
-/* Fields (light theme) */
-.auth-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin-bottom: 0.7rem;
-}
-
+/* Light theme fields */
 .auth-field label {
   font-size: 0.78rem;
   color: #4b5563;
@@ -1623,7 +1723,7 @@ body {
   box-shadow: 0 0 0 1px rgba(79,70,229,0.3);
 }
 
-/* password input with eye icon */
+/* Password input with eye icon */
 .auth-password-wrapper {
   display: flex;
   align-items: center;
@@ -1631,19 +1731,21 @@ body {
   border: 1px solid #d4d4d8;
   background: #ffffff;
 }
+
 .auth-password-wrapper input {
   border: none;
   flex: 1;
   padding: 0.45rem 0.55rem;
   outline: none;
 }
+
 .auth-password-wrapper .auth-eye-icon {
   padding: 0 0.5rem;
   font-size: 0.9rem;
   color: #9ca3af;
 }
 
-/* Login/Signup button */
+/* Primary login/signup button (light) */
 .auth-primary-btn {
   width: 100%;
   border-radius: 0.55rem;
@@ -1655,6 +1757,7 @@ body {
   margin-top: 0.4rem;
   cursor: pointer;
 }
+
 .auth-primary-btn:hover {
   background: #4338ca;
 }
@@ -1681,12 +1784,13 @@ body {
   color: #4b5563;
 }
 
-/* legal + status */
+/* Legal + status text */
 .auth-legal {
   margin-top: 0.4rem;
   font-size: 0.7rem;
   color: #9ca3af;
 }
+
 .auth-legal span {
   text-decoration: underline;
   cursor: pointer;
@@ -1699,8 +1803,509 @@ body {
   color: #b91c1c;
 }
 
+/* ===========================
+   AI ACTIONS ROW
+   =========================== */
+
 .ai-actions {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+/* ===========================
+   DASHBOARD HERO (TOP)
+   =========================== */
+
+.dash-hero {
+  margin-bottom: 1.8rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.dash-hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.dash-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.18rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: rgba(22, 163, 74, 0.16);
+  border: 1px solid rgba(45, 212, 191, 0.8);
+  color: #a5f3fc;
+}
+
+.dash-hero-title {
+  font-size: 2.25rem;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.dash-hero-title span {
+  color: #a5b4fc;
+}
+
+.dash-hero-sub {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-soft);
+  max-width: 32rem;
+}
+
+.dash-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.3rem;
+}
+
+.dash-hero-actions .btn {
+  font-size: 0.85rem;
+  padding-inline: 1.1rem;
+}
+
+/* Mini stats under hero */
+.dash-hero-mini {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: 0.78rem;
+}
+
+.dash-mini-label {
+  display: block;
+  color: var(--text-soft);
+}
+
+.dash-mini-value {
+  display: block;
+  font-weight: 600;
+}
+
+/* Hero right 3D card */
+
+.dash-hero-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.dash-hero-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 1.3rem 1.4rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(129, 140, 248, 0.45), transparent 55%),
+    radial-gradient(circle at bottom, rgba(34, 197, 94, 0.35), transparent 55%),
+    #020617;
+  border: 1px solid rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 22px 45px rgba(15, 23, 42, 0.95),
+    0 0 22px rgba(129, 140, 248, 0.65);
+  position: relative;
+  overflow: hidden;
+  transform: perspective(900px) rotateY(-11deg);
+}
+
+.dash-hero-card::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 60%);
+  pointer-events: none;
+}
+
+.dash-hero-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #c7d2fe;
+  margin-bottom: 0.5rem;
+}
+
+.dash-hero-avatar {
+  position: relative;
+  z-index: 1;
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  background: conic-gradient(from 200deg, #22c55e, #6366f1, #f97316, #22c55e);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.98),
+    0 0 28px rgba(99, 102, 241, 0.8);
+}
+
+.dash-hero-rating-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.dash-hero-stat-label {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--text-soft);
+}
+
+.dash-hero-stat-value {
+  margin: 0.15rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* XP progress bar */
+
+.dash-hero-progress {
+  position: relative;
+  z-index: 1;
+}
+
+.dash-hero-progress-bar {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.4);
+}
+
+.dash-hero-progress-fill {
+  width: 68%;
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #eab308, #f97316);
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.7);
+}
+
+.dash-hero-progress-text {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.dash-hero-progress-text span {
+  color: #fde68a;
+}
+
+.dash-hero-foot {
+  margin: 0.9rem 0 0;
+  font-size: 0.74rem;
+  color: #e5e7eb;
+  opacity: 0.9;
+}
+
+/* Small responsive tweak for hero */
+
+@media (max-width: 900px) {
+  .dash-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-hero-right {
+    justify-content: center;
+  }
+
+  .dash-hero-card {
+    transform: none;
+  }
+}
+
+/* ===========================
+   CREATE VIEW – LOADOUT STYLE
+   =========================== */
+
+#view-create .grid-two {
+  align-items: stretch;
+}
+
+.create-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 55%),
+    radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.25), transparent 60%),
+    #020617;
+  border: 1px solid rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 20px 45px rgba(15, 23, 42, 0.95),
+    0 0 22px rgba(129, 140, 248, 0.55);
+  transform-origin: center;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.create-card::after {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle at top, rgba(34, 197, 94, 0.18), transparent 60%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.create-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 26px 60px rgba(15, 23, 42, 0.98),
+    0 0 34px rgba(129, 140, 248, 0.8);
+  border-color: rgba(129, 140, 248, 1);
+}
+
+.create-card:hover::after {
+  opacity: 1;
+}
+
+.create-card h3 {
+  font-size: 1.1rem;
+}
+
+.create-card .small-list li {
+  font-size: 0.85rem;
+}
+
+/* Manual editor as advanced panel */
+
+.manual-editor {
+  margin-top: 1.8rem;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 60%),
+    #020617;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.95);
+}
+
+.manual-editor h3 {
+  font-size: 1.05rem;
+}
+
+.manual-editor .field label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* ===========================
+   QUIZ PLAYER – MATCH STYLE
+   =========================== */
+
+#view-player .view-header h2 {
+  font-size: 1.4rem;
+}
+
+#playerCard {
+  position: relative;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.22), transparent 60%),
+    radial-gradient(circle at bottom, rgba(129, 140, 248, 0.25), transparent 60%),
+    #020617;
+  border: 1px solid rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.95),
+    0 0 28px rgba(129, 140, 248, 0.8);
+}
+
+#playerQuestionText {
+  font-size: 1.05rem;
+  margin-bottom: 0.9rem;
+}
+
+/* Correct / wrong override for gaming gradient */
+.btn-correct {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+  border-color: #4ade80;
+  color: #022c22;
+}
+
+.btn-wrong {
+  background: linear-gradient(90deg, #b91c1c, #e11d48);
+  border-color: #fecaca;
+}
+
+/* Result card after quiz finishes */
+#playerResult {
+  border-radius: 22px;
+  border: 1px solid rgba(34, 197, 94, 0.9);
+  background:
+    radial-gradient(circle at top, rgba(34, 197, 94, 0.28), transparent 60%),
+    #020617;
+}
+
+/* ===========================
+   LEADERBOARD – ESPORTS HUD
+   =========================== */
+
+#view-leaderboard .card {
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.25), transparent 60%),
+    #020617;
+  border: 1px solid rgba(129, 140, 248, 0.9);
+}
+
+.leaderboard-filters .chip {
+  font-size: 0.78rem;
+}
+
+/* Extra info cards in leaderboard */
+.leaderboard-extra .lb-card {
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.24), transparent 60%),
+    #020617;
+}
+
+/* ===========================
+   HOST / BATTLES VIEW LOBBY
+   =========================== */
+
+.host-form {
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 55%),
+    #020617;
+  border: 1px solid rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 22px 50px rgba(15, 23, 42, 0.96),
+    0 0 26px rgba(129, 140, 248, 0.8);
+}
+
+.host-side {
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top, rgba(34, 197, 94, 0.22), transparent 60%),
+    #020617;
+  border: 1px solid rgba(34, 197, 94, 0.8);
+}
+
+/* Battles specific */
+
+#view-battles .host-form h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#view-battles .host-form h3::after {
+  content: "2v2 / 4v4 lobby";
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #a5b4fc;
+}
+
+#view-battles .card.host-form {
+  background:
+    radial-gradient(circle at left, rgba(236, 72, 153, 0.24), transparent 60%),
+    radial-gradient(circle at right, rgba(56, 189, 248, 0.26), transparent 60%),
+    #020617;
+}
+
+#view-battles .card:not(.host-form) {
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.14), transparent 60%),
+    #020617;
+}
+
+/* ===========================
+   EXPLORE – MARKET STYLE
+   =========================== */
+
+#view-explore .explore-card {
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.2), transparent 60%),
+    #020617;
+  border: 1px solid rgba(129, 140, 248, 0.8);
+}
+
+.categories-block {
+  background: radial-gradient(circle at top, rgba(79, 70, 229, 0.2), transparent 70%);
+  padding: 1.2rem 1.4rem;
+  border-radius: 22px;
+  border: 1px solid rgba(129, 140, 248, 0.6);
+}
+
+.category-grid .cat-card {
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+.category-grid .cat-card:hover {
+  border-color: rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 16px 38px rgba(15, 23, 42, 1),
+    0 0 16px rgba(129, 140, 248, 0.9);
+}
+
+/* ===========================
+   PROFILE – PLAYER OVERVIEW
+   =========================== */
+
+.rating-row .card {
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 60%),
+    #020617;
+}
+
+/* ===========================
+   ABOUT / CONTACT CARDS
+   =========================== */
+
+#view-about .card,
+#view-contact .card {
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 60%),
+    #020617;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+}
+
+/* ===========================
+   STAGGERED BLOCK ANIMATION
+   =========================== */
+
+/* JS se add hone wali class for stagger effect */
+.stagger-in {
+  animation: block-stagger-in 0.45s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes block-stagger-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
