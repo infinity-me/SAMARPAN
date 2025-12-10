@@ -245,37 +245,6 @@ const authSubtitle = document.getElementById("authSubtitle");
 const authStatus   = document.getElementById("authStatus");
 const authGoSignup = document.getElementById("authGoSignup");
 
-// Top triggers: Host / Login / Avatar
-const authTriggers = [
-  document.getElementById("btnHostTop"),
-  document.getElementById("btnAuthTop"),
-  document.getElementById("btnAvatarTop"),
-];
-
-// ================= OPEN / CLOSE HELPERS =================
-function openAuthModal() {
-  if (!authOverlay) return;
-  authOverlay.classList.remove("hidden");
-  if (authStatus) {
-    authStatus.style.color = "#b91c1c";
-    authStatus.textContent = "";
-  }
-}
-
-function closeAuthModal() {
-  if (!authOverlay) return;
-  authOverlay.classList.add("hidden");
-}
-
-// Bind open on click (Host / Login / Avatar)
-authTriggers
-  .filter(Boolean)
-  .forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      openAuthModal();
-    });
-  });
 
 // Close (X button)
 if (authCloseBtn) {
@@ -802,6 +771,39 @@ function showStatusText(el, text, color) {
         });
       });
     })();
+    // ================= AUTH BUTTON FINAL LOGIC =================
+(function () {
+
+  const btnAuthTop   = document.getElementById("btnAuthTop");
+  const btnAvatarTop = document.getElementById("btnAvatarTop");
+  const btnHostTop   = document.getElementById("btnHostTop");
+
+  function handleAuthClick(e) {
+    e.preventDefault();
+    const user = getCurrentUser();
+    if (user) {
+      showView("profile");
+    } else {
+      openAuthModal();
+    }
+  }
+
+  if (btnAuthTop)   btnAuthTop.addEventListener("click", handleAuthClick);
+  if (btnAvatarTop) btnAvatarTop.addEventListener("click", handleAuthClick);
+
+  if (btnHostTop) {
+    btnHostTop.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (!getCurrentUser()) {
+        openAuthModal();
+      } else {
+        showView("host");
+      }
+    });
+  }
+
+})();
+
   } // end attachHandlers
 
 
