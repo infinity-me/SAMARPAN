@@ -1180,9 +1180,7 @@
     </main>
   </div>
 
-  <!-- =========================================
-       AUTH MODAL (POPUP LOGIN / SIGNUP)
-       ========================================= -->
+  <!--   AUTH MODAL (POPUP LOGIN / SIGNUP)  -->
   <div class="auth-overlay hidden" id="authOverlay">
     <div class="auth-modal auth-kahoot-card">
       <button class="auth-close" id="authCloseBtn">&times;</button>
@@ -1192,27 +1190,18 @@
         Sign in to continue using Samarpan.
       </p>
 
-      <!-- Social login buttons -->
-      <div class="auth-social-row auth-social-row-top">
-        <button
-          class="auth-social-pill"
-          type="button"
-          id="socialGoogle"
-          onclick="window.location.href='http://localhost:5000/auth/google'"
-        >
-          <span class="auth-social-icon">G</span>
-          <span>Continue with Google</span>
-        </button>
-        <button
-          class="auth-social-pill"
-          type="button"
-          id="socialFacebook"
-          onclick="window.location.href='http://localhost:5000/auth/facebook'"
-        >
-          <span class="auth-social-icon">f</span>
-          <span>Continue with Facebook</span>
-        </button>
-      </div>
+      <div class="auth-social-row auth-social-row-top full-social">
+  <button class="auth-social-pill social-google" type="button" id="socialGoogle">
+    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="social-icon-img" />
+    <span>Continue with Google</span>
+  </button>
+
+  <button class="auth-social-pill social-facebook" type="button" id="socialFacebook">
+    <img src="https://www.svgrepo.com/show/452196/facebook-1.svg" class="social-icon-img" />
+    <span>Continue with Facebook</span>
+  </button>
+</div>
+
 
       <div class="auth-or-divider"><span>or</span></div>
 
