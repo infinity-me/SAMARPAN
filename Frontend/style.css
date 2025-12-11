@@ -2309,3 +2309,235 @@ body.bg-tab-float {
     transform: translateY(0) scale(1);
   }
 }
+
+/* ===== Gaming/neon styling for the Auth Modal ===== */
+
+/* slightly darker overlay + subtle vignette */
+.auth-overlay {
+  background: linear-gradient(180deg, rgba(2,6,23,0.65), rgba(2,6,23,0.82));
+  backdrop-filter: blur(6px) saturate(1.05);
+}
+
+/* main card: deep glass, neon rim, soft inward glow */
+.auth-modal.auth-kahoot-card {
+  background: linear-gradient(180deg, rgba(6,8,20,0.98), rgba(3,6,15,0.94));
+  color: var(--text);
+  border-radius: 18px;
+  padding: 1.6rem 1.8rem;
+  max-width: 520px;
+  width: 96%;
+  border: 1px solid rgba(99,102,241,0.14);
+  box-shadow:
+    0 28px 60px rgba(2,6,23,0.9),
+    0 0 36px rgba(99,102,241,0.065) inset;
+  position: relative;
+  overflow: visible;
+  transform-origin: center;
+  transition: transform 220ms cubic-bezier(.19,1,.22,1), box-shadow 220ms;
+}
+
+/* animated gradient rim (outside border) */
+.auth-modal.auth-kahoot-card::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(90deg, rgba(34,197,94,0.06), rgba(99,102,241,0.12), rgba(249,115,22,0.06));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  filter: blur(6px);
+  opacity: 0.95;
+  animation: rimShift 6s linear infinite;
+}
+
+@keyframes rimShift {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.02); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* inner header glow & title */
+.auth-main-title {
+  color: #e6eefc;
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 18px rgba(99,102,241,0.28);
+  margin-bottom: 0.15rem;
+}
+.auth-main-sub {
+  color: var(--text-soft);
+  margin-bottom: 0.85rem;
+}
+
+/* close button styled as neon pill */
+.auth-close {
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color: #a8b3ff;
+  box-shadow: 0 6px 22px rgba(99,102,241,0.12);
+  border-radius: 10px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(99,102,241,0.14);
+  transition: transform 140ms ease, box-shadow 140ms ease, color 140ms;
+}
+.auth-close:hover {
+  transform: translateY(-2px) rotate(-6deg);
+  color: #fff;
+  box-shadow: 0 12px 34px rgba(99,102,241,0.22);
+}
+
+/* social pills — make them neon cards with subtle glow */
+.auth-social-pill {
+  background: linear-gradient(180deg, rgba(9,10,20,0.6), rgba(9,10,20,0.45));
+  border: 1px solid rgba(99,102,241,0.12);
+  box-shadow: 0 8px 30px rgba(15,23,42,0.6), 0 0 18px rgba(99,102,241,0.04);
+  color: #dfe8ff;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.auth-social-pill:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(99,102,241,0.14), 0 0 28px rgba(99,102,241,0.18);
+}
+
+/* social icon circle */
+.auth-social-icon {
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: 6px;
+  color: #111827;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+
+/* animated subtle scan line for the modal header */
+.auth-modal .scan-line {
+  position: absolute;
+  left: -20%;
+  top: 18%;
+  width: 140%;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(129,140,248,0.45), transparent);
+  opacity: 0;
+  transform: translateY(-8px) scaleX(0.95);
+}
+.auth-modal.auth-kahoot-card.open .scan-line {
+  animation: scan 1s ease 200ms forwards;
+}
+@keyframes scan {
+  0% { opacity: 0; transform: translateY(-8px) scaleX(0.95); }
+  30% { opacity: 1; transform: translateY(0) scaleX(1); }
+  100% { opacity: 0; transform: translateY(8px) scaleX(1.02); }
+}
+
+/* input focus — neon outline */
+.auth-field input:focus,
+.auth-field textarea:focus,
+.auth-password-wrapper:focus-within {
+  box-shadow: 0 6px 26px rgba(79,70,229,0.08), 0 0 10px rgba(99,102,241,0.06) inset;
+  border-color: rgba(99,102,241,0.85);
+}
+
+/* primary button — big neon capsule */
+.auth-primary-btn {
+  background: linear-gradient(90deg, #6366f1, #22c55e);
+  color: white;
+  border-radius: 12px;
+  padding: 0.6rem 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 12px 34px rgba(99,102,241,0.18);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms;
+}
+.auth-primary-btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.05);
+  box-shadow: 0 18px 46px rgba(99,102,241,0.22);
+}
+
+/* ghost / sso button */
+.auth-sso-btn {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(99,102,241,0.12);
+  color: #e6eefc;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+}
+
+/* tabs */
+.auth-tabs-inline .auth-tab {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.03);
+  color: #cdd6ff;
+}
+.auth-tabs-inline .auth-tab-active {
+  background: linear-gradient(90deg, rgba(99,102,241,0.16), rgba(34,197,94,0.08));
+  color: #ffffff;
+  box-shadow: 0 8px 26px rgba(99,102,241,0.08);
+}
+
+/* small legal & status */
+.auth-legal, .auth-status, .auth-bottom-text {
+  color: var(--text-soft);
+}
+
+/* small responsive tweak: lift modal on very small screens */
+@media (max-width:420px) {
+  .auth-modal.auth-kahoot-card { padding: 1.2rem 1rem; }
+}
+
+/* accessibility: reduce motion preference support */
+@media (prefers-reduced-motion: reduce) {
+  .auth-modal.auth-kahoot-card::before,
+  .auth-modal.auth-kahoot-card,
+  .auth-social-pill,
+  .auth-primary-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* make social row full-width column layout */
+.full-social {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* full-width pill buttons */
+.full-social .auth-social-pill {
+  width: 100%;
+  justify-content: center;
+  padding: 0.7rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* logo  */
+.social-icon-img {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+}
+
+/* Google style */
+.social-google {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+
+/* Facebook style */
+.social-facebook {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+
+.social-google:hover,
+.social-facebook:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 10px 30px rgba(99,102,241,0.25);
+}

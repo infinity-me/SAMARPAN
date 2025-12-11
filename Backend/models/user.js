@@ -17,8 +17,8 @@ const userSchema = new mongoose.Schema(
     // normal signup / login 
     passwordHash: { type: String },
 
-    avatar: { type: String },          
-    provider: { type: String },        
+    avatar: { type: String },        
+    provider: { type: String },    
     googleId: { type: String },
     facebookId: { type: String },
 
