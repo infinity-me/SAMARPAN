@@ -14,15 +14,15 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
 
-    // normal signup / login ke liye
+    // normal signup / login 
     passwordHash: { type: String },
 
-    avatar: { type: String },           
-    provider: { type: String },         
+    avatar: { type: String },        
+    provider: { type: String },    
     googleId: { type: String },
     facebookId: { type: String },
 
-    // tumhara rating system
+    // rating system
     globalRating: { type: Number, default: 1200 },
     ratings: {
       rapid: { type: Number, default: 1200 },
