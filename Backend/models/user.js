@@ -17,9 +17,8 @@ const userSchema = new mongoose.Schema(
     // normal signup / login ke liye
     passwordHash: { type: String },
 
-    // ⭐ social login ke liye extra fields
-    avatar: { type: String },           // Google / Facebook profile photo URL
-    provider: { type: String },         // "google" / "facebook" / "local"
+    avatar: { type: String },           
+    provider: { type: String },         
     googleId: { type: String },
     facebookId: { type: String },
 

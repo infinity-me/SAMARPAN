@@ -1,15 +1,5 @@
-// Backend/server.js
+// server.js — cleaned & commented (small, human-friendly comments)
 require("dotenv").config();
-const Quiz = require("./models/Quiz");
-const RatingHistory = require("./models/RatingHistory");   
-const GameSession = require("./models/GameSession");       
-
-
-console.log("ENV CHECK → FRONTEND_URL:", process.env.FRONTEND_URL);
-console.log("ENV CHECK → GOOGLE_CALLBACK_URL:", process.env.GOOGLE_CALLBACK_URL);
-console.log("ENV CHECK → FACEBOOK_CALLBACK_URL:", process.env.FACEBOOK_CALLBACK_URL);
-console.log("ENV CHECK → GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? 'OK' : 'MISSING');
-console.log("ENV CHECK → FACEBOOK_CLIENT_ID:", process.env.FACEBOOK_CLIENT_ID ? 'OK' : 'MISSING');
 
 const express = require("express");
 const cors = require("cors");
@@ -21,32 +11,34 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const FacebookStrategy = require("passport-facebook").Strategy;
 
 // Models
-const User = require("./models/user");          // file ka naam user.js hai to ye sahi hai
-const aiQuizRoutes = require("./routes/aiQuiz"); // AI quiz routes
+const User = require("./models/user");
+const Quiz = require("./models/Quiz");
+const RatingHistory = require("./models/RatingHistory");
+const GameSession = require("./models/GameSession");
 
-// ====== APP INIT ======
+// Routes
+const aiQuizRoutes = require("./routes/aiQuiz");
+
 const app = express();
 
-// CORS – abhi sab allowed (dev ke liye ok)
-app.use(cors());          // bas itna hi – origin restrict mat karo abhi
+// Basic middleware
+app.use(cors()); // dev: open CORS. Lock this down for production.
 app.use(express.json());
 app.use(passport.initialize());
 
-// ====== MONGO CONNECT ======
-console.log("Mongo URI:", process.env.MONGODB_URI);
-
+// ---------- MongoDB ----------
 async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("🟢 MongoDB Connected");
+    console.log("MongoDB connected");
   } catch (err) {
-    console.error("🔴 MongoDB Error:", err.message);
+    console.error("MongoDB connection error:", err.message);
     process.exit(1);
   }
 }
 connectDB();
 
-// ====== SMALL HELPERS ======
+// ---------- Helpers ----------
 function createJwtForUser(user) {
   return jwt.sign(
     {
@@ -60,23 +52,21 @@ function createJwtForUser(user) {
 }
 
 const FRONTEND_URL =
-  process.env.FRONTEND_URL ||
-  "http://127.0.0.1:5500/Frontend/index.html";
+  process.env.FRONTEND_URL || "http://127.0.0.1:5500/Frontend/index.html";
 
-// ====== HEALTH CHECK ======
-app.get("/api/health", (req, res) => {
-  res.json({ server: "Samarpan Backend", status: "Running ✔" });
+// ---------- Health ----------
+app.get("/api/health", (_req, res) => {
+  res.json({ server: "Samarpan Backend", status: "running" });
 });
 
-// =====================================================
-// =============== LOCAL EMAIL/PASSWORD AUTH ===========
-// =====================================================
+// -------------------------------
+// Email/password auth (basic)
+// -------------------------------
 
-// SIGNUP
+// Signup
 app.post("/api/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
     if (!name || !email || !password) {
       return res.status(400).json({ error: "All fields required" });
     }
@@ -98,7 +88,7 @@ app.post("/api/signup", async (req, res) => {
     const token = createJwtForUser(user);
 
     return res.json({
-      message: "Signup Successful",
+      message: "Signup successful",
       userId: user._id,
       name: user.name,
       email: user.email,
@@ -113,25 +103,22 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
-// LOGIN
+// Login
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
     if (!user || !user.passwordHash) {
       return res.status(400).json({ error: "User not found" });
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) {
-      return res.status(400).json({ error: "Invalid password" });
-    }
+    if (!ok) return res.status(400).json({ error: "Invalid password" });
 
     const token = createJwtForUser(user);
 
-    res.json({
-      message: "Login Successful",
+    return res.json({
+      message: "Login successful",
       userId: user._id,
       name: user.name,
       email: user.email,
@@ -142,11 +129,13 @@ app.post("/api/login", async (req, res) => {
     });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ error: "Login failed" });
+    return res.status(500).json({ error: "Login failed" });
   }
 });
 
-// ====== CREATE QUIZ (MANUAL) ======
+// -------------------------------
+// Quiz creation (manual)
+// -------------------------------
 app.post("/api/quizzes", async (req, res) => {
   try {
     const { title, topic, authorId, questions, tags, aiGenerated } = req.body;
@@ -157,14 +146,15 @@ app.post("/api/quizzes", async (req, res) => {
         .json({ error: "title, authorId and at least 1 question required" });
     }
 
-    // 💡 authorId ko hamesha valid ObjectId banaao
     let resolvedAuthorId = authorId;
 
-    // agar email aaya hai (eg. "abc@gmail.com")
+    // If caller passed an email instead of ObjectId, resolve it to the user's _id
     if (typeof authorId === "string" && authorId.includes("@")) {
       const user = await User.findOne({ email: authorId });
       if (!user) {
-        return res.status(400).json({ error: "User not found for this authorId" });
+        return res
+          .status(400)
+          .json({ error: "User not found for this authorId" });
       }
       resolvedAuthorId = user._id;
     }
@@ -172,24 +162,22 @@ app.post("/api/quizzes", async (req, res) => {
     const quiz = await Quiz.create({
       title,
       topic: topic || "",
-      author: resolvedAuthorId,                   //hamesha ObjectId
+      author: resolvedAuthorId,
       questions,
-      aiGenerated: !!aiGenerated || false,
+      aiGenerated: !!aiGenerated,
       tags: tags || (topic ? [topic.toLowerCase()] : []),
     });
 
-    return res.json({
-      message: "Quiz created",
-      quizId: quiz._id,
-      quiz,
-    });
+    return res.json({ message: "Quiz created", quizId: quiz._id, quiz });
   } catch (err) {
     console.error("Create quiz error:", err);
     return res.status(500).json({ error: "Failed to create quiz" });
   }
 });
 
-// ====== START HOSTED GAME (simple prototype) ======
+// -------------------------------
+// Host / game session (prototype)
+// -------------------------------
 app.post("/api/host/start", async (req, res) => {
   try {
     const { quizId, hostEmail, mode, timerSeconds, rated } = req.body;
@@ -199,16 +187,12 @@ app.post("/api/host/start", async (req, res) => {
     }
 
     const user = await User.findOne({ email: hostEmail });
-    if (!user) {
-      return res.status(400).json({ error: "Host user not found" });
-    }
+    if (!user) return res.status(400).json({ error: "Host user not found" });
 
     const quiz = await Quiz.findById(quizId);
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
+    if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
-    // simple random 6 digit PIN, try until unique
+    // Try to create a unique 6-digit PIN (simple, limited attempts)
     let pin;
     let attempts = 0;
     do {
@@ -227,20 +211,21 @@ app.post("/api/host/start", async (req, res) => {
       pin,
     });
 
-    res.json({
+    return res.json({
       message: "Game session created",
       gameId: game._id,
       pin: game.pin,
     });
   } catch (err) {
     console.error("Host start error:", err);
-    res.status(500).json({ error: "Could not start game" });
+    return res.status(500).json({ error: "Could not start game" });
   }
 });
 
-
-// ====== GLOBAL LEADERBOARD (by globalRating) ======
-app.get("/leaderboard", async (req, res) => {
+// -------------------------------
+// Public leaderboard (top 50)
+// -------------------------------
+app.get("/leaderboard", async (_req, res) => {
   try {
     const users = await User.find({})
       .sort({ globalRating: -1 })
@@ -254,38 +239,37 @@ app.get("/leaderboard", async (req, res) => {
       xp: u.xp,
     }));
 
-    res.json({ scores });
+    return res.json({ scores });
   } catch (err) {
     console.error("Leaderboard error:", err);
-    res.status(500).json({ error: "Failed to load leaderboard" });
+    return res.status(500).json({ error: "Failed to load leaderboard" });
   }
 });
 
-// ====== RATING HISTORY BY EMAIL ======
+// -------------------------------
+// Rating history by email
+// -------------------------------
 app.get("/ratings/:email", async (req, res) => {
   try {
     const email = req.params.email;
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const history = await RatingHistory.find({ user: user._id })
       .sort({ createdAt: -1 })
       .lean();
 
-    res.json({ history });
+    return res.json({ history });
   } catch (err) {
     console.error("Rating history error:", err);
-    res.status(500).json({ error: "Failed to load rating history" });
+    return res.status(500).json({ error: "Failed to load rating history" });
   }
 });
 
-// =====================================================
-// =============== PASSPORT SOCIAL STRATEGIES ==========
-// =====================================================
+// -------------------------------
+// Passport social strategies
+// -------------------------------
 
-// ========== GOOGLE STRATEGY ==========
 passport.use(
   new GoogleStrategy(
     {
@@ -293,16 +277,15 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (accessToken, _refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
         const name = profile.displayName;
-        const avatar = profile.photos?.[0]?.value; // ⭐ DP URL
+        const avatar = profile.photos?.[0]?.value || null;
 
         if (!email) return done(new Error("No email from Google"), null);
 
         let user = await User.findOne({ email });
-
         if (!user) {
           user = await User.create({
             name,
@@ -312,11 +295,21 @@ passport.use(
             googleId: profile.id,
           });
         } else {
-          // update missing info
-          if (!user.provider) user.provider = "google";
-          if (!user.googleId) user.googleId = profile.id;
-          if (!user.avatar && avatar) user.avatar = avatar;
-          await user.save();
+          // update missing pieces, keep it idempotent
+          let changed = false;
+          if (!user.provider) {
+            user.provider = "google";
+            changed = true;
+          }
+          if (!user.googleId) {
+            user.googleId = profile.id;
+            changed = true;
+          }
+          if (!user.avatar && avatar) {
+            user.avatar = avatar;
+            changed = true;
+          }
+          if (changed) await user.save();
         }
 
         done(null, user);
@@ -327,8 +320,6 @@ passport.use(
   )
 );
 
-
-// ========== FACEBOOK STRATEGY ==========
 passport.use(
   new FacebookStrategy(
     {
@@ -337,7 +328,7 @@ passport.use(
       callbackURL: process.env.FACEBOOK_CALLBACK_URL,
       profileFields: ["id", "displayName", "emails", "picture.type(large)"],
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (accessToken, _refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
         const name = profile.displayName;
@@ -349,7 +340,6 @@ passport.use(
         if (!email) return done(new Error("No email from Facebook"), null);
 
         let user = await User.findOne({ email });
-
         if (!user) {
           user = await User.create({
             name,
@@ -359,10 +349,20 @@ passport.use(
             facebookId: profile.id,
           });
         } else {
-          if (!user.provider) user.provider = "facebook";
-          if (!user.facebookId) user.facebookId = profile.id;
-          if (!user.avatar && avatar) user.avatar = avatar;
-          await user.save();
+          let changed = false;
+          if (!user.provider) {
+            user.provider = "facebook";
+            changed = true;
+          }
+          if (!user.facebookId) {
+            user.facebookId = profile.id;
+            changed = true;
+          }
+          if (!user.avatar && avatar) {
+            user.avatar = avatar;
+            changed = true;
+          }
+          if (changed) await user.save();
         }
 
         done(null, user);
@@ -373,52 +373,33 @@ passport.use(
   )
 );
 
-
-
-// ========== SOCIAL LOGIN COMMON REDIRECT HELPER ==========
+// Helper used after successful social auth to send user back to frontend with a token
 function sendSocialLoginRedirect(req, res) {
   const user = req.user;
-
-  const token = jwt.sign(
-    {
-      userId: user._id,
-      email: user.email,
-      name: user.name,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
+  const token = createJwtForUser(user);
 
   const redirectUrl =
-    process.env.FRONTEND_URL +
+    FRONTEND_URL +
     `?token=${encodeURIComponent(token)}` +
     `&name=${encodeURIComponent(user.name || "")}` +
     `&email=${encodeURIComponent(user.email || "")}` +
-    `&avatar=${encodeURIComponent(user.avatar || "")}`; // ⭐ yahan se DP jaa rahi
+    `&avatar=${encodeURIComponent(user.avatar || "")}`;
 
   return res.redirect(redirectUrl);
 }
 
-
-// =====================================================
-// =============== SOCIAL AUTH ROUTES ===================
-// =====================================================
-
-// GOOGLE
+// Social auth routes
 app.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-app.get("/auth/google/callback",
-  passport.authenticate("google", { session:false, failureRedirect: process.env.FRONTEND_URL }),
-  (req,res) => {
-     console.log("callback req.query:", req.query);
-     sendSocialLoginRedirect(req,res);
-  });
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: FRONTEND_URL }),
+  (req, res) => sendSocialLoginRedirect(req, res)
+);
 
-
-// FACEBOOK
 app.get(
   "/auth/facebook",
   passport.authenticate("facebook", { scope: ["email"] })
@@ -426,21 +407,19 @@ app.get(
 
 app.get(
   "/auth/facebook/callback",
-  passport.authenticate("facebook", {
-    session: false,
-    failureRedirect: FRONTEND_URL,
-  }),
-  sendSocialLoginRedirect
+  passport.authenticate("facebook", { session: false, failureRedirect: FRONTEND_URL }),
+  (req, res) => sendSocialLoginRedirect(req, res)
 );
 
-// =====================================================
-// =============== OTHER ROUTES (AI QUIZ) ==============
-// =====================================================
-
+// -------------------------------
+// AI quiz routes (mounted)
+// -------------------------------
 app.use("/api/ai", aiQuizRoutes);
 
-// ====== START SERVER ======
+// -------------------------------
+// Start server
+// -------------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server Live → http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
