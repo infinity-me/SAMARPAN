@@ -3,9 +3,9 @@ const router = express.Router();
 
 const { generateQuizQuestions } = require("../services/gptService");
 const Quiz = require("../models/Quiz");
-const User = require("../models/user"); // ✅ IMPORTANT
+const User = require("../models/user"); 
 
-// ✅ Generate AI Quiz (Schema Compatible)
+// Generate AI Quiz
 router.post("/generate-quiz", async (req, res) => {
   try {
     const { title, topic, difficulty, count, userId, tags } = req.body;
@@ -14,7 +14,7 @@ router.post("/generate-quiz", async (req, res) => {
       return res.status(400).json({ error: "title, topic & difficulty required" });
     }
 
-    // ✅ Convert Email OR ID → ObjectId
+    // Convert Email OR ID to ObjectId
     let authorId = null;
 
     if (userId) {
@@ -40,14 +40,14 @@ router.post("/generate-quiz", async (req, res) => {
     const quiz = await Quiz.create({
       title,
       topic,
-      author: authorId, // ✅ ALWAYS correct type now
+      author: authorId,
       questions,
       aiGenerated: true,
       tags: tags || [],
     });
 
     res.json({
-      message: "✅ AI Quiz Generated Successfully",
+      message: "AI Quiz Generated Successfully",
       quizId: quiz._id,
       quiz,
     });
