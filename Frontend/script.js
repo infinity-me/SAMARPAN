@@ -216,11 +216,13 @@
       if (!token) return;
 
       const user = {
-        token,
-        name: params.get("name") || "",
-        email: params.get("email") || "",
-        avatar: params.get("avatar") || "",
-      };
+  token,
+  userId: params.get("userId") || "",
+  name: params.get("name") || "",
+  email: params.get("email") || "",
+  avatar: params.get("avatar") || "",
+};
+
       setCurrentUser(user);
       updateUIOnLogin(user);
 

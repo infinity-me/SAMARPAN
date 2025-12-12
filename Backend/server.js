@@ -52,7 +52,7 @@ function createJwtForUser(user) {
 }
 
 const FRONTEND_URL =
-  process.env.FRONTEND_URL || "http://127.0.0.1:5500/Frontend/index.html";
+  process.env.FRONTEND_URL || "http://localhost:5500/Frontend/index.html";
 
 // ---------- Health ----------
 app.get("/api/health", (_req, res) => {
