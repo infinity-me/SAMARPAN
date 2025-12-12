@@ -1809,4 +1809,54 @@ function loadDummyLeaderboard() {
     showView,
     renderLastAIQuizToDashboard,
   };
+  // Mobile nav binding (safe to place at end of script.js)
+(function() {
+  const nav = document.getElementById("mobileNav");
+  if (!nav) return;
+
+  function setActive(viewName) {
+    const buttons = nav.querySelectorAll(".mob-btn");
+    buttons.forEach(b => {
+      const v = b.getAttribute("data-view");
+      if (!v) return;
+      b.classList.toggle("active", v === viewName);
+    });
+  }
+
+  // click handler (calls existing data-view logic if present)
+  nav.addEventListener("click", (e) => {
+    const btn = e.target.closest(".mob-btn");
+    if (!btn) return;
+    const view = btn.getAttribute("data-view");
+    if (!view) return;
+
+    // prefer the central SPA handler (data-view) if it's wired; otherwise call showView directly
+    const el = document.querySelector(`[data-view="${view}"]`);
+    if (el && typeof el.click === "function") {
+      el.click();
+    } else if (typeof window.showView === "function") {
+      window.showView(view);
+    } else if (window.Samarpan && typeof window.Samarpan.showView === "function") {
+      window.Samarpan.showView(view);
+    }
+
+    setActive(view);
+  });
+
+  // update active on route change
+  const origShow = window.showView || (window.Samarpan && window.Samarpan.showView);
+  if (origShow && typeof origShow === "function") {
+    const patched = function(name) {
+      try { origShow(name); } catch(e){ console.warn(e); }
+      setActive(name.replace(/^view-/, ""));
+    };
+    // assign back to both references so other code still calls patched
+    window.showView = patched;
+    if (window.Samarpan) window.Samarpan.showView = patched;
+  }
+
+  // set default active (dashboard)
+  setActive("dashboard");
+})();
+
 })();
