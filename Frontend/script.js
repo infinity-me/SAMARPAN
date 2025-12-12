@@ -12,8 +12,11 @@ const dummyLeaderboard = [
   { rank: 10, name: "BlitzPanda", rating: 1455, quizzes: 80, avgScore: "72%", bestRank: "#8" }
 ];
 (function () {
-  
-window.API_BASE = (function () {
+  // ======================
+  // Basic configuration
+  // ======================
+const API_BASE = (function() {
+  // If running on Vercel production domain, use your Render backend
   if (location.hostname === "samarpan-quiz.vercel.app") {
     return "https://samarpan-9rt8.onrender.com";
   }
