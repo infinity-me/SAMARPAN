@@ -1,3 +1,16 @@
+// -------------------- DUMMY LEADERBOARD DATA --------------------
+const dummyLeaderboard = [
+  { rank: 1, name: "MindBreaker", rating: 1842, quizzes: 127, avgScore: "92%", bestRank: "#1" },
+  { rank: 2, name: "QuizSniper", rating: 1765, quizzes: 119, avgScore: "89%", bestRank: "#1" },
+  { rank: 3, name: "NightCrawler", rating: 1710, quizzes: 102, avgScore: "87%", bestRank: "#2" },
+  { rank: 4, name: "RaptorX", rating: 1669, quizzes: 98, avgScore: "85%", bestRank: "#3" },
+  { rank: 5, name: "ShadowWizard", rating: 1622, quizzes: 110, avgScore: "84%", bestRank: "#4" },
+  { rank: 6, name: "NeonSamurai", rating: 1592, quizzes: 88, avgScore: "81%", bestRank: "#4" },
+  { rank: 7, name: "Brainiac_07", rating: 1544, quizzes: 73, avgScore: "79%", bestRank: "#5" },
+  { rank: 8, name: "QuizMachine", rating: 1520, quizzes: 91, avgScore: "77%", bestRank: "#6" },
+  { rank: 9, name: "HyperNova", rating: 1488, quizzes: 68, avgScore: "75%", bestRank: "#7" },
+  { rank: 10, name: "BlitzPanda", rating: 1455, quizzes: 80, avgScore: "72%", bestRank: "#8" }
+];
 (function () {
   // ======================
   // Basic configuration
@@ -43,6 +56,38 @@
       fn();
     }
   }
+// -------------------- INSERT DUMMY LEADERBOARD --------------------
+function loadDummyLeaderboard() {
+  const tableBody = document.getElementById("leaderboard-body") || document.getElementById("leaderboardBody");
+  if (!tableBody) return;
+
+  // clear existing rows (prevents duplicates on multiple calls)
+  while (tableBody.firstChild) tableBody.removeChild(tableBody.firstChild);
+
+  dummyLeaderboard.forEach(player => {
+    // Normalize/sanitize values (avoid undefined)
+    const rank = player.rank ?? "";
+    // replace smart quotes with straight quotes to avoid weird encoding issues
+    const name = String(player.name || "").replace(/[“”]/g, '"');
+    const rating = player.rating ?? "";
+    const quizzes = player.quizzes ?? "";
+    const avgScore = player.avgScore ?? "";
+    const bestRank = player.bestRank ?? "";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${rank}</td>
+      <td>${name}</td>
+      <td>${rating}</td>
+      <td>${quizzes}</td>
+      <td>${avgScore}</td>
+      <td>${bestRank}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+
 
   // ======================
   // View switching (SPA)
@@ -1722,6 +1767,7 @@
     if (document.getElementById("view-dashboard")) {
       showView("dashboard");
     }
+    loadDummyLeaderboard();
   });
 
   // ======================
