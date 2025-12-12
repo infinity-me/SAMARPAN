@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -22,7 +23,30 @@ const aiQuizRoutes = require("./routes/aiQuiz");
 const app = express();
 
 // Basic middleware
-app.use(cors()); // dev: open CORS. Lock this down for production.
+const allowedOrigins = [
+  process.env.FRONTEND_URL,          // e.g. https://your-frontend.vercel.app
+  "http://127.0.0.1:5500",     // local live server
+  "http://127.0.0.1:5501",
+  "http://localhost:5500",
+  "http://localhost:5501",
+  "https://samarpan-quiz.vercel.app",       
+  "https://samarpan-9rt8.onrender.com"    
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (curl, mobile apps, OAuth callback)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("CORS blocked: " + origin));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(passport.initialize());
 
@@ -52,7 +76,7 @@ function createJwtForUser(user) {
 }
 
 const FRONTEND_URL =
-  process.env.FRONTEND_URL || "http://localhost:5500/Frontend/index.html";
+  process.env.FRONTEND_URL || "https://samarpan-quiz.vercel.app";
 
 // ---------- Health ----------
 app.get("/api/health", (_req, res) => {

@@ -15,7 +15,17 @@ const dummyLeaderboard = [
   // ======================
   // Basic configuration
   // ======================
-  const API_BASE = "http://localhost:5000"; // Backend base URL
+const API_BASE = (function() {
+  // If running on Vercel production domain, use your Render backend
+  if (location.hostname === "samarpan-quiz.vercel.app") {
+    return "https://samarpan-9rt8.onrender.com";
+  }
+  // fallback to localhost (dev)
+  return "http://localhost:5000";
+})();
+
+
+
 
   // ======================
   // Small helpers
