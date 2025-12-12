@@ -2541,3 +2541,58 @@ body.bg-tab-float {
   transform: translateY(-3px);
   box-shadow: 0px 10px 30px rgba(99,102,241,0.25);
 }
+/* Mobile bottom nav */
+.mobile-nav {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 16px;
+  display: none;                
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(10,11,25,0.85), rgba(6,7,20,0.76));
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.03);
+  z-index: 1200;
+  align-items: center;
+}
+
+/* show only on small viewports (mobile) */
+@media (max-width: 900px) {
+  .mobile-nav { display: flex; }
+}
+
+/* buttons */
+.mobile-nav .mob-btn {
+  --s: 46px;
+  height: var(--s);
+  min-width: 64px;
+  padding: 6px 10px;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #dbeafe; /* light neon */
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.mobile-nav .mob-btn svg { display:block; color: #b8c6ff; opacity: 0.95; }
+
+.mobile-nav .mob-btn:active { transform: translateY(2px); }
+
+/* active state */
+.mobile-nav .mob-btn.active {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  box-shadow: 0 6px 18px rgba(72,61,255,0.12);
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+.mobile-nav .mob-btn span { display:block; font-size:11px; line-height:1; }
