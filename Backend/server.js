@@ -1,8 +1,8 @@
 // server.js — cleaned & commented (small, human-friendly comments)
 require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
+const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
@@ -19,8 +19,6 @@ const GameSession = require("./models/GameSession");
 
 // Routes
 const aiQuizRoutes = require("./routes/aiQuiz");
-
-const app = express();
 
 // Basic middleware
 const allowedOrigins = [
